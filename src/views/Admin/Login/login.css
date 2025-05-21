@@ -1,0 +1,32 @@
+.input {
+  border: 1px solid #e5e5e5;
+  padding: 10px;
+  border-radius: 10px;
+  margin-left: 40px;
+}
+
+.input1 {
+  border: 1px solid #e5e5e5;
+  padding: 10px;
+  border-radius: 10px;
+  margin-left: 37px;
+}
+
+.input2 {
+  border: 1px solid #e5e5e5;
+  padding: 10px;
+  border-radius: 10px;
+  margin-left: 40px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: 10px;
+  margin-left: 20px;
+}
+
+.input-group label {
+  margin-right: 10px;
+}/*# sourceMappingURL=login.css.map */

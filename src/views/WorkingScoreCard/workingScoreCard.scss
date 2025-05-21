@@ -1,0 +1,41 @@
+.clicked {
+    color: red;
+  }
+  label {
+    display: inline-block;
+    width: 150px;
+    text-align: left;
+  }
+  .input-plan{
+    align-items: "right";
+}
+.input-comment{
+  
+  height: 60px;
+  padding: 10px;
+  border: 2px solid #efefef;
+  border-radius:7px;
+  background: white;
+  margin-bottom: 10px;
+  
+}
+.btn-saveWorkPlan .workplan-btn{
+  width: 100px;
+  height:20px;
+  display: flex;
+  font-family: "Roboto", sans-serif;
+  outline: green solid 3px;
+  border: 0;
+  text-decoration: none;
+ 
+  color: #1c1010;
+  font-size: 16px;
+  justify-content: center;
+  align-items: center;
+  margin: 20px 10px 130px;
+  box-shadow: 3px 3px 5px 0 rgba(0,0,0,0.3);
+  
+}
+.textarea-width {
+  width: 275px; /* Adjust the width value as needed */
+}
