@@ -102,7 +102,7 @@ const PreviousWorkplans = () => {
           "/workplan/searchWorkplanByAppraisee",
           {
             params: {
-              period: "2023-Q3",
+              period: getCurrentEvaluationPeriod().evaluationPeriod,
               planStatus: status,
               User_email: userName,
             },

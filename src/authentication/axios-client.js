@@ -6,13 +6,16 @@ import { useStateContext } from "../context/ContextProvider";
 // })
 
 const axiosClient = axios.create({
-  baseURL: "http://10.45.0.229:8080/",
+  baseURL: "http://10.18.7.37:8080/",
 });
 
 axiosClient.interceptors.request.use((config) => {
   const token = localStorage.getItem("ACCESS_TOKEN");
 
-  config.headers.Authorization = token;
+  // Don't add Authorization header for login endpoints
+  if (config.url && !config.url.includes("/temp-login") && !config.url.includes("/adminlogin")) {
+    config.headers.Authorization = token;
+  }
 
   return config;
 });

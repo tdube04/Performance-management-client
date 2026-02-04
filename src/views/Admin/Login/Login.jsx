@@ -63,46 +63,49 @@ export default function Login() {
 
     setIsLoading(true);
     axiosClient
-      .post("/login", payload)
+      .post("/temp-login", payload)
       .then(async ({ data }) => {
         setToken(data.jwtToken);
-        console.log(data.jwtToken);
+        console.log("JWT Token:", data.jwtToken);
+        console.log("Login Response:", data);
         const decodedToken = jwt_decode(data.jwtToken);
 
-        console.log(decodedToken.sub);
-        setUserName(decodedToken.sub);
+        console.log("Decoded Token:", decodedToken);
+        const username = decodedToken.sub;
+        setUserName(username);
 
-        if (decodedToken.ADMIN) {
+        // Check the logAs property from the decoded JWT token
+        const userRole = decodedToken.logAs;
+        console.log("User role from JWT:", userRole);
+        
+        if (userRole === "admin") {
           setUserType("ADMIN");
-          setUserName(decodedToken.sub);
-          console.log("ADMIN");
-        } else if (decodedToken.USER) {
-          setUserType("USER");
-          setUserName(decodedToken.sub);
-          console.log("USER");
+          console.log("User logged in as ADMIN");
         } else {
-          try {
-            const response = await axiosClient.get(
-              `/User/{id}?id=${decodedToken.sub}`
-            );
-            setProfileData(response.data);
-            console.log("My Appraiser profile");
-            console.log(response.data.ec_number);
+          setUserType("USER");
+          console.log("User logged in as USER");
+        }
 
-            if (response.data.ec_number === null) {
-              const signupUrl = `/signup?userName=${decodedToken.sub}&token=${data.jwtToken}`;
-              window.location.href = signupUrl;
+        // Check if user profile is complete
+        try {
+          const response = await axiosClient.get(
+            `/User/{id}?id=${username}`
+          );
+          setProfileData(response.data);
+          console.log("User profile:", response.data);
 
-              setToken(null);
-              localStorage.removeItem(token);
-              localStorage.clear();
-            } else {
-              setUserType("USER");
-              setUserName(decodedToken.sub);
-            }
-          } catch (error) {
-            console.error(error);
+          if (response.data.ec_number === null) {
+            // Redirect to signup to complete profile
+            const signupUrl = `/signup?userName=${username}&token=${data.jwtToken}`;
+            window.location.href = signupUrl;
+
+            setToken(null);
+            localStorage.removeItem(token);
+            localStorage.clear();
           }
+        } catch (error) {
+          console.error("Error fetching user profile:", error);
+          // If user profile doesn't exist yet, they'll be redirected on the next page
         }
       })
       .catch((err) => {

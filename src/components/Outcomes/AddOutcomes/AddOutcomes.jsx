@@ -144,6 +144,12 @@ const AddOutcomes = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
+    // Add null checks for refs
+    if (!outcomeRef.current || !weightRef.current) {
+      setMessage("Form inputs are not properly initialized");
+      return;
+    }
+
     const outcomeName = outcomeRef.current.value.trim().toUpperCase();
     const weight = weightRef.current.value.trim();
 
@@ -220,8 +226,8 @@ const AddOutcomes = () => {
 
       
       setSelectedPerfomance("")
-      outcomeRef.current.value = "";
-      weightRef.current.value = "";
+      if (outcomeRef.current) outcomeRef.current.value = "";
+      if (weightRef.current) weightRef.current.value = "";
     } catch (error) {
       console.log(error);
 
@@ -651,8 +657,8 @@ const AddOutcomes = () => {
                 onSubmit={(e) =>
                   handleUpdate(
                     e,
-                    outcomeRef.current.value,
-                    weightRef.current.value
+                    outcomeRef.current ? outcomeRef.current.value : "",
+                    weightRef.current ? weightRef.current.value : ""
                   )
                 }
                 style={{ width: "500px" }}

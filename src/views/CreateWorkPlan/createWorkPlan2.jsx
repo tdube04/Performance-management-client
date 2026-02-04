@@ -416,7 +416,7 @@ export default function CreateWorkPlan() {
       signatureStatus: "signed",
     };
 
-    const evaluationPeriod = "2023-Q3";
+    const evaluationPeriod = getCurrentEvaluationPeriod().evaluationPeriod;
 
     const evaluator = {
       ecNumber: "5660",

@@ -185,7 +185,7 @@ function Row({ program, area, planStatus }) {
   };
 
   const handleSubmitUpdatedEvidencesData = async () => {
-    const evaluationPeriod = "2023-Q3";
+    const evaluationPeriod = getCurrentEvaluationPeriod().evaluationPeriod;
 
     axiosClient
       .get("/scorecard/searchScorecard", {

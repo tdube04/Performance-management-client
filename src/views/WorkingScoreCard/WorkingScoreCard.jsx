@@ -483,7 +483,7 @@ const WorkingScoreCard = () => {
 
         const newPerformanceArea = { ...updatedPerformanceArea };
 
-        const evaluationPeriod = "2023-Q3";
+        const evaluationPeriod = getCurrentEvaluationPeriod().evaluationPeriod;
 
         axiosClient
           .get("/scorecard/searchScorecard", {
