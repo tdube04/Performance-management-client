@@ -7,22 +7,20 @@ const StateContext = createContext({
   userType: null,
   userName: null,
   profileData: null,
-  setUser: () => {},
-  setToken: () => {},
-  setNotification: () => {},
-  setUserType: () => {},
-  setUserName: () => {},
-  setProfileData: () => {},
+  setUser: () => { },
+  setToken: () => { },
+  setNotification: () => { },
+  setUserType: () => { },
+  setUserName: () => { },
+  setProfileData: () => { },
 });
 
 export const ContextProvider = ({ children }) => {
   const [user, setUser] = useState({});
   // const [token, _setToken] = useState(123);
   const [token, _setToken] = useState(localStorage.getItem("ACCESS_TOKEN"));
-  const [userType, _setUserType] = useState("");
-
-  const [userName, _setUserName] = useState("");
-
+  const [userType, _setUserType] = useState(localStorage.getItem("USER_TYPE") || "");
+  const [userName, _setUserName] = useState(localStorage.getItem("USER_NAME") || "");
   const [profileData, _setProfileData] = useState(null);
 
   const [notification, _setNotification] = useState("");
@@ -35,16 +33,27 @@ export const ContextProvider = ({ children }) => {
       localStorage.removeItem("ACCESS_TOKEN");
     }
   };
+
   const setProfileData = (profileData) => {
     _setProfileData(profileData);
   };
 
   const setUserType = (userType) => {
     _setUserType(userType);
+    if (userType) {
+      localStorage.setItem("USER_TYPE", userType);
+    } else {
+      localStorage.removeItem("USER_TYPE");
+    }
   };
 
   const setUserName = (userName) => {
     _setUserName(userName);
+    if (userName) {
+      localStorage.setItem("USER_NAME", userName);
+    } else {
+      localStorage.removeItem("USER_NAME");
+    }
   };
 
   const setNotification = (message) => {

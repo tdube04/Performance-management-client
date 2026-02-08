@@ -160,7 +160,7 @@ function ViewProfileModal() {
             >
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <div className="">
-                  <Typography style={{}}>Account Details</Typography>
+                  <Typography style={{}}>Profile Details</Typography>
                   <hr />
                   <Typography style={{ fontWeight: "bold", fontSize: 13 }}>
                     DETAILS

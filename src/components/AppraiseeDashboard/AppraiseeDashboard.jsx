@@ -25,6 +25,13 @@ export default function AppraiseeDashboard() {
       try {
         const response = await axiosClient.get(`/User/{id}?id=${userName}`);
         setProfileData(response.data);
+
+        // Redirect Board members (grade 0) to Board Dashboard
+        if (response.data.grade === "0") {
+          window.location.href = "/board-dashboard/dashboard";
+          return;
+        }
+
         console.log(response.data.ec_number);
         console.log(response.data);
       } catch (error) {

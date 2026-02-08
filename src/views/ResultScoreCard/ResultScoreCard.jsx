@@ -951,18 +951,11 @@ export default function ResultScoreCard() {
     };
 
     fetchData();
-    
-    // Set up polling to check for status updates every 30 seconds
-    const pollInterval = setInterval(fetchData, 30000);
-    
-    return () => clearInterval(pollInterval);
   }, [
     profileData,
     selectedPerfomance,
     totalWeightedScore,
     totalProgramsWeight,
-    evaluationPeriod,
-    userName,
   ]);
 
   const handlePerformanceClick = async (area, index) => {

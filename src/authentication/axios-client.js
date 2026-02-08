@@ -6,7 +6,7 @@ import { useStateContext } from "../context/ContextProvider";
 // })
 
 const axiosClient = axios.create({
-  baseURL: "http://10.18.7.37:8080/",
+  baseURL: "http://192.168.0.186:8080/",
 });
 
 axiosClient.interceptors.request.use((config) => {

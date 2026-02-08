@@ -77,7 +77,7 @@ export default function Login() {
         // Check the logAs property from the decoded JWT token
         const userRole = decodedToken.logAs;
         console.log("User role from JWT:", userRole);
-        
+
         if (userRole === "admin") {
           setUserType("ADMIN");
           console.log("User logged in as ADMIN");
@@ -93,6 +93,13 @@ export default function Login() {
           );
           setProfileData(response.data);
           console.log("User profile:", response.data);
+
+          // Check if user is Board member (grade 0)
+          if (response.data.grade === "0") {
+            console.log("Board member detected, redirecting to Board dashboard");
+            window.location.href = "/board-dashboard/dashboard";
+            return;
+          }
 
           if (response.data.ec_number === null) {
             // Redirect to signup to complete profile
@@ -140,73 +147,73 @@ export default function Login() {
   return (
     <>
 
-    <div className="login-signup-form animated fadeInDown">
-    <div><h3 className="project-title "><strong>PERFORMANCE EVALUATION SYSTEM</strong></h3></div>
-      <div className="form">
-        <form onSubmit={onSubmit}>
-          {/* <img src="public/images/zimra.png" alt="Logo" className="logo" /> */}
-          <div className="logo-container">
-            <img src="public/images/zimra.png" alt="Logo" className="logo" />
-          </div>
-          <h1 className="title">Login into your account</h1>
-          {/* {message && (
+      <div className="login-signup-form animated fadeInDown">
+        <div><h3 className="project-title "><strong>PERFORMANCE EVALUATION SYSTEM</strong></h3></div>
+        <div className="form">
+          <form onSubmit={onSubmit}>
+            {/* <img src="public/images/zimra.png" alt="Logo" className="logo" /> */}
+            <div className="logo-container">
+              <img src="public/images/zimra.png" alt="Logo" className="logo" />
+            </div>
+            <h1 className="title">Login into your account</h1>
+            {/* {message && (
             <div className="alert">
               <p>{message}</p>
             </div>
           )} */}
-          <label>Username: </label>
-          <input
-            className="input1"
-            ref={usernameRef}
-            type="text"
-            placeholder="Username"
-            variant="outlined"
-            onClick={handleInputClick}
-          />{" "}
-          <br />
-          <br />
-          <label>Password: </label>
-          <input
-            className="input2"
-            ref={passwordRef}
-            type="password"
-            placeholder="Password"
-            onClick={handleInputClick}
-          />
-          <br />
-          <br />
-          <div className="">
-            <button className="btn-login">
-              {isLoading ? (
-                <div style={{ margin: "auto" }}>
-                  <CircularProgress color="success" />{" "}
-                </div>
-              ) : (
-                "Submit"
-              )}
-            </button>
-          </div>
-          {userData && (
-            <div>
-              <p>Welcome, {userData.sub}!</p>
-              <ul>
-                {userData.ADMIN.map((permission, index) => (
-                  <li key={index}>{permission}</li>
-                ))}
-              </ul>
+            <label>Username: </label>
+            <input
+              className="input1"
+              ref={usernameRef}
+              type="text"
+              placeholder="Username"
+              variant="outlined"
+              onClick={handleInputClick}
+            />{" "}
+            <br />
+            <br />
+            <label>Password: </label>
+            <input
+              className="input2"
+              ref={passwordRef}
+              type="password"
+              placeholder="Password"
+              onClick={handleInputClick}
+            />
+            <br />
+            <br />
+            <div className="">
+              <button className="btn-login">
+                {isLoading ? (
+                  <div style={{ margin: "auto" }}>
+                    <CircularProgress color="success" />{" "}
+                  </div>
+                ) : (
+                  "Submit"
+                )}
+              </button>
             </div>
-          )}
-          <p className="message">
-            Admin Click to <Link to="/adminlogin">Login</Link>
-          </p>
-          {message && (
-            <div className="alert alert-danger">
-              <p>{message}</p>
-            </div>
-          )}
-        </form>
+            {userData && (
+              <div>
+                <p>Welcome, {userData.sub}!</p>
+                <ul>
+                  {userData.ADMIN.map((permission, index) => (
+                    <li key={index}>{permission}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <p className="message">
+              Admin Click to <Link to="/adminlogin">Login</Link>
+            </p>
+            {message && (
+              <div className="alert alert-danger">
+                <p>{message}</p>
+              </div>
+            )}
+          </form>
+        </div>
       </div>
-    </div>
     </>
   );
 }

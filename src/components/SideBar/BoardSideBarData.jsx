@@ -11,104 +11,49 @@ export const BoardSideBarData = [
   {
     title: (
       <span style={{ color: "#A6990D" }}>
-        <strong>APPRAISER VIEW</strong>
+        <strong>BOARD VIEW</strong>
       </span>
     ),
     path: "",
 
     icon: <AiIcons.AiFillHome style={{ color: "#A6990D" }} />,
-    // iconClosed: <RiIcons.RiArrowDownSFill />,
-    // iconOpened: <RiIcons.RiArrowUpSFill />,
     subNav: [],
   },
 
   {
-    title: "Appraisee Workplans",
+    title: "Board Approvals",
     path: "",
     icon: <IoIcons.IoIosPaper />,
     iconClosed: <RiIcons.RiArrowDownSFill />,
     iconOpened: <RiIcons.RiArrowUpSFill />,
 
     subNav: [
-      // {
-      //   title: "Completed",
-      //   path: "/completed",
-      //   icon: <IoIcons.IoIosPaper />,
-      //   cName: "sub-nav",
-      // },
-
       {
-        title: "Pending Approval Workplans",
-        path: "/underreview",
+        title: "Workplan Approvals",
+        path: "/board-dashboard/workplan-approvals",
         icon: <IoIcons.IoIosPaper />,
         cName: "sub-nav",
       },
       {
-        title: "Approved Workplans",
-        path: "/approved",
-        icon: <IoIcons.IoIosPaper />,
+        title: "Scorecard Approvals",
+        path: "/board-dashboard/scorecard-approvals",
+        icon: <FaIcons.FaEnvelopeOpenText />,
         cName: "sub-nav",
       },
-      {
-        title: "Rejected Workplans",
-        path: "/rejected",
-        icon: <IoIcons.IoIosPaper />,
-        cName: "sub-nav",
-      },
-
-      // {
-      //   title: "All IRBMS",
-      //   path: "/allirbms",
-      //   icon: <IoIcons.IoIosPaper />,
-      //   cName: "sub-nav",
-      // },
     ],
   },
 
   {
-    title: "Results Scorecards",
+    title: "Commissioner General",
     path: "",
-    icon: <FaIcons.FaEnvelopeOpenText />,
-
-    iconClosed: <RiIcons.RiArrowDownSFill />,
-    iconOpened: <RiIcons.RiArrowUpSFill />,
-
-    subNav: [
-      {
-        title: "Pending Results Scorecard ",
-        path: "/appraisee-result-scorecard-pending-approval",
-        icon: <IoIcons.IoIosPaper />,
-        cName: "sub-nav",
-      },
-      {
-        title: "Approved Results Scorecard ",
-        path: "/approved-appraisee-results-scorecard",
-        icon: <IoIcons.IoMdPeople />,
-      },
-      {
-        title: "Rejected Results Scorecard ",
-        path: "/rejected-appraisee-results-scorecard",
-        icon: <IoIcons.IoMdPeople />,
-      },
-    ],
-  },
-  {
-    title: "My Appraisees",
-    path: "",
-    icon: <IoIcons.IoIosPaper />,
+    icon: <IoIcons.IoMdPeople />,
     iconClosed: <RiIcons.RiArrowDownSFill />,
     iconOpened: <RiIcons.RiArrowUpSFill />,
     subNav: [
       {
-        title: "View Appraisees",
-        path: "/allirbms",
-        icon: <IoIcons.IoIosPaper />,
-        cName: "sub-nav",
-      },
-      {
-        title: "Add Appraisee",
-        path: "/add-appraisee",
-        icon: <IoIcons.IoIosPaper />,
+        title: "View CG Profile",
+        path: "/board-dashboard/cg-profile",
+        icon: <IoIcons.IoMdPeople />,
         cName: "sub-nav",
       },
     ],

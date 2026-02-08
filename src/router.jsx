@@ -57,6 +57,9 @@ import UpdateWorkplan2 from "./views/CreateWorkPlan/UpdateWorkplan2";
 import AdminLogin from "./views/Admin/Login/AdminLogin";
 import BoardLayout from "./components/AdminLayout/BoardLayout";
 import BoardPortalHomePage from "./views/AdminDashboard/BoardPortalHomePage";
+import BoardWorkplanList from "./views/BoardDashboard/BoardWorkplanList";
+import BoardScorecardList from "./views/BoardDashboard/BoardScorecardList";
+import BoardViewScorecard from "./views/BoardDashboard/BoardViewScorecard";
 import EvaluatorApproveResultsScorecard from "./views/Approved/EvaluatorApproveResultsScorecard";
 import EvaluatorViewApprovedResultsScorecard from "./views/EvaluatorViewResultsScorecard/EvaluatorViewResultsScorecard";
 
@@ -83,17 +86,17 @@ const router = createBrowserRouter([
         path: "/createWorkPlan",
         element: <CreateWorkPlan />,
       },
-      
+
       {
         path: "/updateWorkPlan",
         element: <UpdateWorkPlan />,
       },
-     
+
       {
         path: "/update-Workplan",
         element: <UpdateWorkplan2 />,
       },
-      
+
       {
         path: "/viewWorkPlan",
         element: <ViewWorkPlan />,
@@ -214,14 +217,14 @@ const router = createBrowserRouter([
       },
       {
         path: "/update-profile",
-        element: <UpdateProfile/>,
+        element: <UpdateProfile />,
       },
       {
         path: "/update-profile",
-        element: <UpdateProfile/>,
+        element: <UpdateProfile />,
       },
       /////////////////////////////////BOARD DASHBOARD ENDPOINTS///////////////////////////////////////
-      
+
       {
         path: "/board-dashboard/completed",
         element: <Completed />,
@@ -231,17 +234,17 @@ const router = createBrowserRouter([
         path: "/board-dashboard/createWorkPlan",
         element: <CreateWorkPlan />,
       },
-      
+
       {
         path: "/board-dashboard/updateWorkPlan",
         element: <UpdateWorkPlan />,
       },
-     
+
       {
         path: "/board-dashboard/update-Workplan",
         element: <UpdateWorkplan2 />,
       },
-      
+
       {
         path: "/board-dashboard/viewWorkPlan",
         element: <ViewWorkPlan />,
@@ -361,7 +364,7 @@ const router = createBrowserRouter([
         path: "/signup",
         element: <Signup />,
       },
-       {
+      {
         path: "/signup",
         element: <Signup />,
       },
@@ -375,7 +378,7 @@ const router = createBrowserRouter([
     path: "/admin",
     element: <AdminLayout />,
     children: [
-     
+
       {
         path: "/admin/dashboard",
         element: <AdminHomePage />,
@@ -447,19 +450,29 @@ const router = createBrowserRouter([
     ],
   },
   // {
-  //   path: "/board-dashboard",
-  //   element: <BoardLayout />,
-  //   children: [
-     
-  //     {
-  //       path: "/board-dashboard/dashboard",
-  //       element: <BoardPortalHomePage />,
-  //     },
-    
-
-      
-  //   ],
-  // },
+  // Board Dashboard Routes
+  {
+    path: "/board-dashboard",
+    element: <BoardLayout />,
+    children: [
+      {
+        path: "/board-dashboard/dashboard",
+        element: <BoardPortalHomePage />,
+      },
+      {
+        path: "/board-dashboard/workplan-approvals",
+        element: <BoardWorkplanList />,
+      },
+      {
+        path: "/board-dashboard/scorecard-approvals",
+        element: <BoardScorecardList />,
+      },
+      {
+        path: "/board-dashboard/view-scorecard", // New route for detailed view
+        element: <BoardViewScorecard />,
+      },
+    ],
+  },
 
   {
     path: "*",
