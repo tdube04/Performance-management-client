@@ -20,7 +20,10 @@ import ResultScoreCard from "./views/ResultScoreCard/ResultScoreCard";
 import AllIrbms from "./views/AllIrbms/AllIrbms";
 import GuestLayout from "./components/GuestLayout";
 import AdminLayout from "./components/AdminLayout/AdminLayout";
+import HCLayout from "./components/AdminLayout/HCLayout";
 import AdminHomePage from "./views/AdminDashboard/AdminHomePage";
+import HCDashboard from "./views/HC/HCDashboard";
+import NotificationManagement from "./views/HC/NotificationManagement";
 import AddPillars from "./components/Pillars/AddPillars/AddPillars";
 import ViewPillars from "./components/Pillars/ViewPillars/ViewPillars";
 import SelectCurrentYear from "./components/Pillars/SelectCurrentYear/SelectCurrentYear";
@@ -62,6 +65,7 @@ import BoardScorecardList from "./views/BoardDashboard/BoardScorecardList";
 import BoardViewScorecard from "./views/BoardDashboard/BoardViewScorecard";
 import EvaluatorApproveResultsScorecard from "./views/Approved/EvaluatorApproveResultsScorecard";
 import EvaluatorViewApprovedResultsScorecard from "./views/EvaluatorViewResultsScorecard/EvaluatorViewResultsScorecard";
+import AppraiseeConfirmation from "./views/ResultScoreCard/AppraiseeConfirmation";
 
 const router = createBrowserRouter([
   {
@@ -212,6 +216,11 @@ const router = createBrowserRouter([
       },
 
       {
+        path: "/confirm-scorecard",
+        element: <AppraiseeConfirmation />,
+      },
+
+      {
         path: "/add-indicator",
         element: <AddNewIndicator />,
       },
@@ -349,6 +358,62 @@ const router = createBrowserRouter([
       {
         path: "/board-dashboard/selected-rejected-appraisee-results-scorecard",
         element: <ViewRejectedResultsScorecard />,
+      },
+    ],
+  },
+  // {
+  // HC Dashboard Routes
+  {
+    path: "/hc",
+    element: <HCLayout />,
+    children: [
+      {
+        path: "/hc/dashboard",
+        element: <HCDashboard />,
+      },
+      {
+        path: "/hc/users",
+        element: <HCDashboard />,
+      },
+      {
+        path: "/hc/users/grade",
+        element: <HCDashboard />,
+      },
+      {
+        path: "/hc/users/division",
+        element: <HCDashboard />,
+      },
+      {
+        path: "/hc/users/section",
+        element: <HCDashboard />,
+      },
+      {
+        path: "/hc/submissions",
+        element: <HCDashboard />,
+      },
+      {
+        path: "/hc/pending",
+        element: <HCDashboard />,
+      },
+      {
+        path: "/hc/post-quarter",
+        element: <HCDashboard />,
+      },
+      {
+        path: "/hc/notifications",
+        element: <NotificationManagement />,
+      },
+      {
+        path: "/hc/reports/summary",
+        element: <HCDashboard />,
+      },
+      {
+        path: "/hc/reports/export",
+        element: <HCDashboard />,
+      },
+      {
+        path: "/hc/scorecard/:id/review",
+        element: <HCDashboard />,
       },
     ],
   },

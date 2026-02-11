@@ -74,15 +74,24 @@ export default function AdminLogin() {
         const username = decodedToken.sub;
         setUserName(username);
 
-        // Check the role from the decoded token - backend sets logAs to "admin" or "user"
+        // Check the role from the decoded token - backend sets logAs to "admin" or "user" or "hc"
         const userRole = data.logAs || decodedToken.logAs || decodedToken.role;
         
         if (userRole === "admin") {
           setUserType("ADMIN");
           console.log("User logged in as ADMIN");
+          // Redirect to admin dashboard
+          window.location.href = "/admin/dashboard";
+        } else if (userRole === "hc") {
+          setUserType("HC");
+          console.log("User logged in as HC");
+          // Redirect to HC dashboard
+          window.location.href = "/hc/dashboard";
         } else {
           setUserType("USER");
           console.log("User logged in as USER");
+          // Redirect to user dashboard
+          window.location.href = "/dashboard";
         }
 
         // Check if user profile is complete

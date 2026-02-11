@@ -18,6 +18,9 @@ import ListItemText from "@mui/material/ListItemText";
 import ListSubheader from "@mui/material/ListSubheader";
 import { useStateContext } from "../../context/ContextProvider";
 import ArticleIcon from "@mui/icons-material/Article";
+import Button from "@mui/material/Button";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import { useNavigate } from "react-router-dom";
 
 const getCurrentEvaluationPeriod = () => {
   const currentDate = new Date();
@@ -87,6 +90,9 @@ export default function SummaryScores() {
   const [planStatus, setPlanStatus] = useState("");
   const { evaluationPeriod, daysRemaining } = getCurrentEvaluationPeriod();
   const [totalOveralWeightedScore, setTotalOveralWeightedScore] = useState(0);
+  const navigate = useNavigate();
+  const [needsConfirmation, setNeedsConfirmation] = useState(false);
+  const [hasConfirmed, setHasConfirmed] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -154,6 +160,15 @@ export default function SummaryScores() {
             setTotalOveralWeightedScore(
               response.data.content[0].total_overal_weighted_score
             );
+            
+            // Check if scorecard needs confirmation
+            const status = response.data.content[0].scorecardStatus;
+            const alreadyConfirmed = response.data.content[0].appraiseeConfirmed;
+            if ((status === "Approved" || status === "EvaluatorApproved") && !alreadyConfirmed) {
+              setNeedsConfirmation(true);
+            } else if (alreadyConfirmed) {
+              setHasConfirmed(true);
+            }
           }
         } catch (error) {
           console.error(error);
@@ -167,6 +182,74 @@ export default function SummaryScores() {
   return (
     <React.Fragment>
       <div style={{ marginLeft: "30px" }}>
+        {/* Confirmation Alert Banner */}
+        {needsConfirmation && (
+          <div style={{
+            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            borderRadius: "12px",
+            padding: "24px",
+            marginBottom: "24px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            boxShadow: "0 4px 15px rgba(102, 126, 234, 0.4)"
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+              <CheckCircleIcon sx={{ fontSize: 40, color: "#fff" }} />
+              <div>
+                <Typography variant="h6" sx={{ color: "#fff", fontWeight: "bold" }}>
+                  Scorecard Ready for Confirmation
+                </Typography>
+                <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.9)" }}>
+                  Your appraiser has approved your result scorecard. Please review and confirm acceptance.
+                </Typography>
+              </div>
+            </div>
+            <Button
+              variant="contained"
+              onClick={() => navigate("/confirm-scorecard")}
+              sx={{
+                backgroundColor: "#fff",
+                color: "#667eea",
+                fontWeight: "bold",
+                px: 4,
+                py: 1.5,
+                borderRadius: "8px",
+                "&:hover": {
+                  backgroundColor: "#f5f5f5",
+                  transform: "scale(1.05)"
+                }
+              }}
+            >
+              Confirm Now
+            </Button>
+          </div>
+        )}
+
+        {/* Already Confirmed Banner */}
+        {hasConfirmed && (
+          <div style={{
+            background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+            borderRadius: "12px",
+            padding: "20px",
+            marginBottom: "24px",
+            display: "flex",
+            alignItems: "center",
+            gap: "16px",
+            boxShadow: "0 4px 15px rgba(16, 185, 129, 0.4)"
+          }}>
+            <CheckCircleIcon sx={{ fontSize: 32, color: "#fff" }} />
+            <div>
+              <Typography variant="h6" sx={{ color: "#fff", fontWeight: "bold" }}>
+                Scorecard Confirmed
+              </Typography>
+              <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.9)" }}>
+                Your result scorecard has been confirmed and forwarded to Human Capital for processing.
+              </Typography>
+            </div>
+          </div>
+        )}
+
         <Typography
           variant="h5"
           align="center"
