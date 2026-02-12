@@ -39,7 +39,9 @@ const HCLayout = () => {
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const response = await axiosClient.get("/notifications");
+        // Fetch notifications visible to this user role
+        const userRole = userType ? userType.toLowerCase() : "user";
+        const response = await axiosClient.get(`/notifications/visible?userRole=${userRole}`);
         if (response.data && Array.isArray(response.data)) {
           setNotifications(response.data);
         }
@@ -49,7 +51,7 @@ const HCLayout = () => {
     };
 
     fetchNotifications();
-  }, []);
+  }, [userType]);
 
   const onLogout = () => {
     Swal.fire({
@@ -296,7 +298,7 @@ const HCLayout = () => {
 
       {/* Main Content */}
       <main className={`hc-main-content ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
-        <Outlet />
+        <Outlet key={location.pathname} />
       </main>
     </div>
   );

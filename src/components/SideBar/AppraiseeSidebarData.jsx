@@ -16,6 +16,12 @@ export const AppraiseeSidebarData = [
     subNav: [],
   },
   {
+    title: "Notifications",
+    path: "/my-notifications",
+    icon: <AiIcons.AiOutlineBell />,
+    subNav: [],
+  },
+  {
     title: "My Work Plan",
     path: "",
     icon: <IoIcons.IoIosPaper />,

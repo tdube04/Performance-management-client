@@ -6,7 +6,7 @@ import { useStateContext } from "../context/ContextProvider";
 // })
 
 const axiosClient = axios.create({
-  baseURL: "http://10.18.7.196:8080/",
+  baseURL: import.meta.env.VITE_API_BASE_URL || "http://10.18.5.66:8080/"
 });
 
 axiosClient.interceptors.request.use((config) => {
@@ -26,12 +26,16 @@ axiosClient.interceptors.response.use(
   },
 
   (error) => {
+    // Handle connection errors gracefully
+    if (!error.response) {
+      console.error("Network error - backend may be unreachable:", error.message);
+      // Return a mock response or rethrow
+      throw new Error("Unable to connect to server. Please check your connection.");
+    }
+    
     const { response } = error;
     if (response.status === 401) {
       localStorage.removeItem("ACCESS_TOKEN");
-      // window.location.reload();
-    } else if (response.status === 404) {
-      //Show not found
     }
 
     throw error;

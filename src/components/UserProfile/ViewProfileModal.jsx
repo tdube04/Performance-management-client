@@ -50,7 +50,7 @@ function ViewProfileModal() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await axiosClient.get(`/User/{id}?id=${userName}`);
+        const response = await axiosClient.get(`/User/${userName}`);
         setProfileData(response.data);
         console.log(response.data.ec_number);
         console.log(response.data);

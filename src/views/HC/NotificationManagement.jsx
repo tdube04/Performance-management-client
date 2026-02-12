@@ -19,7 +19,11 @@ import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import Menu from "@mui/material/Menu";
+import Switch from "@mui/material/Switch";
+import FormControlLabel from "@mui/material/FormControlLabel";
 import Swal from "sweetalert2";
+import Divider from "@mui/material/Divider";
+import Fade from "@mui/material/Fade";
 import * as AiIcons from "react-icons/ai";
 import * as FaIcons from "react-icons/fa";
 import "./notificationManagement.scss";
@@ -36,6 +40,7 @@ const NotificationManagement = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [visibilityDialogOpen, setVisibilityDialogOpen] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -46,6 +51,11 @@ const NotificationManagement = () => {
     startDate: "",
     endDate: "",
     isActive: true,
+    visibleToAll: true,
+    visibleToAppraisees: true,
+    visibleToAppraisers: true,
+    visibleToHC: true,
+    visibleToAdmin: true,
   });
 
   useEffect(() => {
@@ -96,7 +106,7 @@ const NotificationManagement = () => {
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "Failed to create notification",
+        text: error.response?.data?.message || "Failed to create notification",
       });
     }
   };
@@ -125,7 +135,38 @@ const NotificationManagement = () => {
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "Failed to update notification",
+        text: error.response?.data?.message || "Failed to update notification",
+      });
+    }
+  };
+
+  const handleVisibilityUpdate = async () => {
+    try {
+      const payload = {
+        visibleToAll: formData.visibleToAll,
+        visibleToAppraisees: formData.visibleToAppraisees,
+        visibleToAppraisers: formData.visibleToAppraisers,
+        visibleToHC: formData.visibleToHC,
+        visibleToAdmin: formData.visibleToAdmin,
+      };
+
+      await axiosClient.put(`/notifications/${selectedNotification.id}/visibility`, payload);
+      
+      Swal.fire({
+        icon: "success",
+        title: "Success",
+        text: "Visibility settings updated successfully",
+      });
+      
+      setVisibilityDialogOpen(false);
+      resetForm();
+      fetchNotifications();
+    } catch (error) {
+      console.error("Error updating visibility:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error.response?.data?.message || "Failed to update visibility",
       });
     }
   };
@@ -150,7 +191,7 @@ const NotificationManagement = () => {
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "Failed to delete notification",
+        text: error.response?.data?.message || "Failed to delete notification",
       });
     }
   };
@@ -174,7 +215,7 @@ const NotificationManagement = () => {
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "Failed to restore notification",
+        text: error.response?.data?.message || "Failed to restore notification",
       });
     }
   };
@@ -188,6 +229,11 @@ const NotificationManagement = () => {
       startDate: "",
       endDate: "",
       isActive: true,
+      visibleToAll: true,
+      visibleToAppraisees: true,
+      visibleToAppraisers: true,
+      visibleToHC: true,
+      visibleToAdmin: true,
     });
   };
 
@@ -200,21 +246,62 @@ const NotificationManagement = () => {
     setAnchorEl(null);
   };
 
+  const openVisibilityDialog = () => {
+    if (selectedNotification) {
+      setFormData({
+        title: selectedNotification.title,
+        message: selectedNotification.message,
+        priority: selectedNotification.priority,
+        targetAudience: selectedNotification.targetAudience,
+        startDate: selectedNotification.startDate || "",
+        endDate: selectedNotification.endDate || "",
+        isActive: selectedNotification.isActive,
+        visibleToAll: selectedNotification.visibleToAll,
+        visibleToAppraisees: selectedNotification.visibleToAppraisees,
+        visibleToAppraisers: selectedNotification.visibleToAppraisers,
+        visibleToHC: selectedNotification.visibleToHC,
+        visibleToAdmin: selectedNotification.visibleToAdmin,
+      });
+      setVisibilityDialogOpen(true);
+    }
+    handleMenuClose();
+  };
+
+  const VisibilityToggle = ({ label, checked, onChange }) => (
+    <Box className="visibility-toggle">
+      <Typography className="visibility-label">{label}</Typography>
+      <Switch
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        color="primary"
+        size="small"
+        className="visibility-switch"
+      />
+      <Chip 
+        label={checked ? "Visible" : "Hidden"} 
+        size="small"
+        color={checked ? "success" : "default"}
+        variant="outlined"
+        className="visibility-status"
+      />
+    </Box>
+  );
+
   const columns = [
     {
       accessorKey: "title",
       header: "Title",
-      size: 150,
-    },
-    {
-      accessorKey: "message",
-      header: "Message",
-      size: 250,
+      size: 180,
       Cell: ({ row }) => (
-        <span className="message-cell">
-          {row.original.message?.substring(0, 50)}
-          {row.original.message?.length > 50 ? "..." : ""}
-        </span>
+        <Box className="title-cell">
+          <Typography variant="subtitle2" className="title-text">
+            {row.original.title}
+          </Typography>
+          <Typography variant="caption" className="title-preview">
+            {row.original.message?.substring(0, 50)}
+            {row.original.message?.length > 50 ? "..." : ""}
+          </Typography>
+        </Box>
       ),
     },
     {
@@ -227,40 +314,59 @@ const NotificationManagement = () => {
         if (priority === "high") color = "error";
         else if (priority === "medium") color = "warning";
         else if (priority === "low") color = "info";
-        return <Chip label={priority} color={color} size="small" />;
+        return (
+          <Chip 
+            label={priority} 
+            color={color} 
+            size="small" 
+            variant="outlined"
+            className="priority-chip"
+          />
+        );
       },
     },
     {
-      accessorKey: "targetAudience",
-      header: "Audience",
-      size: 100,
+      accessorKey: "visibility",
+      header: "Visibility",
+      size: 200,
       Cell: ({ row }) => (
-        <Chip 
-          label={row.original.targetAudience} 
-          variant="outlined"
-          size="small" 
-        />
+        <Box className="visibility-chips">
+          {row.original.visibleToAll && (
+            <Chip label="All" size="small" color="primary" className="visibility-chip" />
+          )}
+          {row.original.visibleToAppraisees && (
+            <Chip label="Appraisees" size="small" className="visibility-chip" />
+          )}
+          {row.original.visibleToAppraisers && (
+            <Chip label="Appraisers" size="small" className="visibility-chip" />
+          )}
+        </Box>
       ),
     },
     {
       accessorKey: "createdBy",
       header: "Created By",
       size: 120,
+      Cell: ({ row }) => (
+        <Typography variant="body2" className="creator-name">
+          {row.original.createdBy}
+        </Typography>
+      ),
     },
     {
       accessorKey: "createdAt",
       header: "Created Date",
       size: 120,
       Cell: ({ row }) => (
-        <span>
+        <Typography variant="body2" className="date-cell">
           {row.original.createdAt 
             ? new Date(row.original.createdAt).toLocaleDateString() 
             : "-"}
-        </span>
+        </Typography>
       ),
     },
     {
-      accessorKey: "isActive",
+      accessorKey: "status",
       header: "Status",
       size: 100,
       Cell: ({ row }) => (
@@ -268,28 +374,17 @@ const NotificationManagement = () => {
           label={row.original.isActive ? "Active" : "Inactive"} 
           color={row.original.isActive ? "success" : "default"}
           size="small"
-        />
-      ),
-    },
-    {
-      accessorKey: "isDeleted",
-      header: "Deleted",
-      size: 80,
-      Cell: ({ row }) => (
-        <Chip 
-          label={row.original.isDeleted ? "Yes" : "No"} 
-          color={row.original.isDeleted ? "error" : "default"}
-          size="small"
           variant="outlined"
+          className="status-chip"
         />
       ),
     },
     {
       accessorKey: "actions",
       header: "Actions",
-      size: 100,
+      size: 120,
       Cell: ({ row }) => (
-        <div>
+        <Box className="action-buttons">
           <Tooltip title="View">
             <IconButton
               size="small"
@@ -297,6 +392,7 @@ const NotificationManagement = () => {
                 setSelectedNotification(row.original);
                 setViewDialogOpen(true);
               }}
+              className="action-btn"
             >
               <AiIcons.AiFillEye />
             </IconButton>
@@ -304,6 +400,19 @@ const NotificationManagement = () => {
           
           {isHCPersonnel && !row.original.isDeleted && (
             <>
+              <Tooltip title="Visibility Settings">
+                <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    setSelectedNotification(row.original);
+                    openVisibilityDialog();
+                  }}
+                  className="action-btn visibility-btn"
+                >
+                  <FaIcons.FaEye />
+                </IconButton>
+              </Tooltip>
+              
               <Tooltip title="Edit">
                 <IconButton
                   size="small"
@@ -317,9 +426,15 @@ const NotificationManagement = () => {
                       startDate: row.original.startDate || "",
                       endDate: row.original.endDate || "",
                       isActive: row.original.isActive,
+                      visibleToAll: row.original.visibleToAll,
+                      visibleToAppraisees: row.original.visibleToAppraisees,
+                      visibleToAppraisers: row.original.visibleToAppraisers,
+                      visibleToHC: row.original.visibleToHC,
+                      visibleToAdmin: row.original.visibleToAdmin,
                     });
                     setEditDialogOpen(true);
                   }}
+                  className="action-btn"
                 >
                   <AiIcons.AiFillEdit />
                 </IconButton>
@@ -332,6 +447,7 @@ const NotificationManagement = () => {
                     setSelectedNotification(row.original);
                     setDeleteDialogOpen(true);
                   }}
+                  className="action-btn delete-btn"
                 >
                   <AiIcons.AiFillDelete />
                 </IconButton>
@@ -345,12 +461,13 @@ const NotificationManagement = () => {
                 size="small"
                 color="primary"
                 onClick={() => handleRestore(row.original)}
+                className="action-btn restore-btn"
               >
                 <AiIcons.AiOutlineReload />
               </IconButton>
             </Tooltip>
           )}
-        </div>
+        </Box>
       ),
     },
   ];
@@ -363,7 +480,7 @@ const NotificationManagement = () => {
             <AiIcons.AiOutlineNotification /> Notification Management
           </Typography>
           <Typography variant="subtitle1" className="page-subtitle">
-            Create, view, update, and manage system notifications
+            Create and manage system notifications with visibility controls
           </Typography>
         </Box>
         
@@ -391,8 +508,16 @@ const NotificationManagement = () => {
           initialState={{ showColumnFilters: false }}
           muiTableHeadCellProps={{
             sx: {
-              backgroundColor: "#f5f5f5",
-              fontWeight: "bold",
+              backgroundColor: "#fafafa",
+              fontWeight: 600,
+              fontSize: 13,
+              borderBottom: "2px solid #e0e0e0",
+            }
+          }}
+          muiTableBodyRowProps={{
+            sx: {
+              '&:hover': { backgroundColor: '#f8f9fa' },
+              borderBottom: "1px solid #f0f0f0",
             }
           }}
         />
@@ -404,8 +529,9 @@ const NotificationManagement = () => {
         onClose={() => setCreateDialogOpen(false)}
         maxWidth="sm"
         fullWidth
+        TransitionComponent={Fade}
       >
-        <DialogTitle>
+        <DialogTitle className="dialog-header">
           <AiIcons.AiOutlinePlusCircle /> Create Notification
         </DialogTitle>
         <DialogContent>
@@ -417,6 +543,7 @@ const NotificationManagement = () => {
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               margin="normal"
               required
+              className="form-field"
             />
             <TextField
               fullWidth
@@ -427,140 +554,145 @@ const NotificationManagement = () => {
               multiline
               rows={4}
               required
+              className="form-field"
             />
-            <FormControl fullWidth margin="normal">
-              <InputLabel>Priority</InputLabel>
-              <Select
-                value={formData.priority}
-                label="Priority"
-                onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-              >
-                <MenuItem value="low">Low</MenuItem>
-                <MenuItem value="normal">Normal</MenuItem>
-                <MenuItem value="medium">Medium</MenuItem>
-                <MenuItem value="high">High</MenuItem>
-              </Select>
-            </FormControl>
-            <FormControl fullWidth margin="normal">
-              <InputLabel>Target Audience</InputLabel>
-              <Select
-                value={formData.targetAudience}
-                label="Target Audience"
-                onChange={(e) => setFormData({ ...formData, targetAudience: e.target.value })}
-              >
-                <MenuItem value="all">All Users</MenuItem>
-                <MenuItem value="admin">Admins Only</MenuItem>
-                <MenuItem value="hc">HC Only</MenuItem>
-                <MenuItem value="appraisees">Appraisees</MenuItem>
-                <MenuItem value="appraisers">Appraisers</MenuItem>
-              </Select>
-            </FormControl>
-            <TextField
-              fullWidth
-              label="Start Date"
-              type="date"
-              value={formData.startDate}
-              onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-              margin="normal"
-              InputLabelProps={{ shrink: true }}
-            />
-            <TextField
-              fullWidth
-              label="End Date"
-              type="date"
-              value={formData.endDate}
-              onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-              margin="normal"
-              InputLabelProps={{ shrink: true }}
-            />
+            
+            <Divider className="form-divider" />
+            <Typography variant="subtitle2" className="section-label">Settings</Typography>
+            
+            <Box className="form-row">
+              <FormControl fullWidth margin="normal" className="form-field-half">
+                <InputLabel>Priority</InputLabel>
+                <Select
+                  value={formData.priority}
+                  label="Priority"
+                  onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                >
+                  <MenuItem value="low">Low</MenuItem>
+                  <MenuItem value="normal">Normal</MenuItem>
+                  <MenuItem value="medium">Medium</MenuItem>
+                  <MenuItem value="high">High</MenuItem>
+                </Select>
+              </FormControl>
+              
+              <FormControl fullWidth margin="normal" className="form-field-half">
+                <InputLabel>Target Audience</InputLabel>
+                <Select
+                  value={formData.targetAudience}
+                  label="Target Audience"
+                  onChange={(e) => setFormData({ ...formData, targetAudience: e.target.value })}
+                >
+                  <MenuItem value="all">All Users</MenuItem>
+                  <MenuItem value="admin">Admins Only</MenuItem>
+                  <MenuItem value="hc">HC Only</MenuItem>
+                  <MenuItem value="appraisees">Appraisees</MenuItem>
+                  <MenuItem value="appraisers">Appraisers</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
+            
+            <Box className="form-row">
+              <TextField
+                label="Start Date"
+                type="date"
+                value={formData.startDate}
+                onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                margin="normal"
+                InputLabelProps={{ shrink: true }}
+                className="form-field-half"
+              />
+              <TextField
+                label="End Date"
+                type="date"
+                value={formData.endDate}
+                onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                margin="normal"
+                InputLabelProps={{ shrink: true }}
+                className="form-field-half"
+              />
+            </Box>
+            
+            <Divider className="form-divider" />
+            <Typography variant="subtitle2" className="section-label">Visibility Control</Typography>
+            <Typography variant="caption" className="section-hint">
+              Control which users can see this notification
+            </Typography>
+            
+            <Box className="visibility-section">
+              <VisibilityToggle
+                label="Visible to All Users"
+                checked={formData.visibleToAll}
+                onChange={(checked) => setFormData({ ...formData, visibleToAll: checked })}
+              />
+              <VisibilityToggle
+                label="Visible to Appraisees"
+                checked={formData.visibleToAppraisees}
+                onChange={(checked) => setFormData({ ...formData, visibleToAppraisees: checked })}
+              />
+              <VisibilityToggle
+                label="Visible to Appraisers"
+                checked={formData.visibleToAppraisers}
+                onChange={(checked) => setFormData({ ...formData, visibleToAppraisers: checked })}
+              />
+            </Box>
           </Box>
         </DialogContent>
-        <DialogActions>
+        <DialogActions className="dialog-actions">
           <Button onClick={() => setCreateDialogOpen(false)}>Cancel</Button>
           <Button variant="contained" onClick={handleCreate}>Create</Button>
         </DialogActions>
       </Dialog>
 
-      {/* Edit Dialog */}
+      {/* Visibility Settings Dialog */}
       <Dialog 
-        open={editDialogOpen} 
-        onClose={() => setEditDialogOpen(false)}
+        open={visibilityDialogOpen} 
+        onClose={() => setVisibilityDialogOpen(false)}
         maxWidth="sm"
         fullWidth
+        TransitionComponent={Fade}
       >
-        <DialogTitle>
-          <AiIcons.AiFillEdit /> Edit Notification
+        <DialogTitle className="dialog-header">
+          <FaIcons.FaEye /> Visibility Settings
         </DialogTitle>
         <DialogContent>
-          <Box component="form" className="notification-form">
-            <TextField
-              fullWidth
-              label="Title"
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              margin="normal"
-              required
+          <Typography variant="subtitle1" className="notification-title-preview">
+            {selectedNotification?.title}
+          </Typography>
+          <Typography variant="body2" className="notification-subtitle-preview">
+            Control which users can see this notification
+          </Typography>
+          
+          <Box className="visibility-section-full">
+            <VisibilityToggle
+              label="Visible to All Users"
+              checked={formData.visibleToAll}
+              onChange={(checked) => setFormData({ ...formData, visibleToAll: checked })}
             />
-            <TextField
-              fullWidth
-              label="Message"
-              value={formData.message}
-              onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-              margin="normal"
-              multiline
-              rows={4}
-              required
+            <VisibilityToggle
+              label="Visible to Appraisees"
+              checked={formData.visibleToAppraisees}
+              onChange={(checked) => setFormData({ ...formData, visibleToAppraisees: checked })}
             />
-            <FormControl fullWidth margin="normal">
-              <InputLabel>Priority</InputLabel>
-              <Select
-                value={formData.priority}
-                label="Priority"
-                onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-              >
-                <MenuItem value="low">Low</MenuItem>
-                <MenuItem value="normal">Normal</MenuItem>
-                <MenuItem value="medium">Medium</MenuItem>
-                <MenuItem value="high">High</MenuItem>
-              </Select>
-            </FormControl>
-            <FormControl fullWidth margin="normal">
-              <InputLabel>Target Audience</InputLabel>
-              <Select
-                value={formData.targetAudience}
-                label="Target Audience"
-                onChange={(e) => setFormData({ ...formData, targetAudience: e.target.value })}
-              >
-                <MenuItem value="all">All Users</MenuItem>
-                <MenuItem value="admin">Admins Only</MenuItem>
-                <MenuItem value="hc">HC Only</MenuItem>
-                <MenuItem value="appraisees">Appraisees</MenuItem>
-                <MenuItem value="appraisers">Appraisers</MenuItem>
-              </Select>
-            </FormControl>
-            <TextField
-              fullWidth
-              label="Start Date"
-              type="date"
-              value={formData.startDate}
-              onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-              margin="normal"
-              InputLabelProps={{ shrink: true }}
+            <VisibilityToggle
+              label="Visible to Appraisers"
+              checked={formData.visibleToAppraisers}
+              onChange={(checked) => setFormData({ ...formData, visibleToAppraisers: checked })}
             />
-            <TextField
-              fullWidth
-              label="End Date"
-              type="date"
-              value={formData.endDate}
-              onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-              margin="normal"
-              InputLabelProps={{ shrink: true }}
+            <VisibilityToggle
+              label="Visible to HC Personnel"
+              checked={formData.visibleToHC}
+              onChange={(checked) => setFormData({ ...formData, visibleToHC: checked })}
+            />
+            <VisibilityToggle
+              label="Visible to Admin Users"
+              checked={formData.visibleToAdmin}
+              onChange={(checked) => setFormData({ ...formData, visibleToAdmin: checked })}
             />
           </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleUpdate}>Update</Button>
+        <DialogActions className="dialog-actions">
+          <Button onClick={() => setVisibilityDialogOpen(false)}>Cancel</Button>
+          <Button variant="contained" onClick={handleVisibilityUpdate}>Save Changes</Button>
         </DialogActions>
       </Dialog>
 
@@ -570,36 +702,52 @@ const NotificationManagement = () => {
         onClose={() => setViewDialogOpen(false)}
         maxWidth="sm"
         fullWidth
+        TransitionComponent={Fade}
       >
-        <DialogTitle>
+        <DialogTitle className="dialog-header">
           <AiIcons.AiFillEye /> Notification Details
         </DialogTitle>
         <DialogContent>
           {selectedNotification && (
             <Box className="notification-details">
-              <Typography variant="h6">{selectedNotification.title}</Typography>
-              <Typography variant="body1" sx={{ mt: 2 }}>
+              <Typography variant="h6" className="detail-title">{selectedNotification.title}</Typography>
+              <Typography variant="body1" className="detail-message">
                 {selectedNotification.message}
               </Typography>
-              <Box sx={{ mt: 2 }}>
+              
+              <Box className="detail-chips">
                 <Chip 
                   label={`Priority: ${selectedNotification.priority}`} 
                   size="small"
-                  sx={{ mr: 1 }}
+                  color={selectedNotification.priority === "high" ? "error" : "default"}
+                  className="detail-chip"
                 />
                 <Chip 
                   label={`Audience: ${selectedNotification.targetAudience}`} 
                   size="small"
                   variant="outlined"
-                  sx={{ mr: 1 }}
+                  className="detail-chip"
                 />
                 <Chip 
                   label={selectedNotification.isActive ? "Active" : "Inactive"} 
                   size="small"
                   color={selectedNotification.isActive ? "success" : "default"}
+                  className="detail-chip"
                 />
               </Box>
-              <Typography variant="caption" sx={{ display: "block", mt: 2 }}>
+              
+              <Box className="visibility-preview">
+                <Typography variant="subtitle2" className="visibility-label">Visible to:</Typography>
+                <Box className="visibility-tags">
+                  {selectedNotification.visibleToAll && <Chip label="All" size="small" color="primary" />}
+                  {selectedNotification.visibleToAppraisees && <Chip label="Appraisees" size="small" />}
+                  {selectedNotification.visibleToAppraisers && <Chip label="Appraisers" size="small" />}
+                  {selectedNotification.visibleToHC && <Chip label="HC" size="small" />}
+                  {selectedNotification.visibleToAdmin && <Chip label="Admin" size="small" />}
+                </Box>
+              </Box>
+              
+              <Typography variant="caption" className="detail-meta">
                 Created by: {selectedNotification.createdBy} on{" "}
                 {selectedNotification.createdAt 
                   ? new Date(selectedNotification.createdAt).toLocaleString() 
@@ -608,7 +756,7 @@ const NotificationManagement = () => {
             </Box>
           )}
         </DialogContent>
-        <DialogActions>
+        <DialogActions className="dialog-actions">
           <Button onClick={() => setViewDialogOpen(false)}>Close</Button>
         </DialogActions>
       </Dialog>
@@ -619,8 +767,9 @@ const NotificationManagement = () => {
         onClose={() => setDeleteDialogOpen(false)}
         maxWidth="xs"
         fullWidth
+        TransitionComponent={Fade}
       >
-        <DialogTitle>
+        <DialogTitle className="dialog-header">
           <AiIcons.AiOutlineExclamationCircle /> Confirm Delete
         </DialogTitle>
         <DialogContent>
@@ -628,7 +777,7 @@ const NotificationManagement = () => {
             Are you sure you want to delete this notification? This action can be undone.
           </Typography>
         </DialogContent>
-        <DialogActions>
+        <DialogActions className="dialog-actions">
           <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
           <Button variant="contained" color="error" onClick={handleSoftDelete}>
             Delete

@@ -92,7 +92,7 @@ export default function Login() {
         // Check if user profile is complete
         try {
           const response = await axiosClient.get(
-            `/User/{id}?id=${username}`
+            `/User/${username}`
           );
           setProfileData(response.data);
           console.log("User profile:", response.data);

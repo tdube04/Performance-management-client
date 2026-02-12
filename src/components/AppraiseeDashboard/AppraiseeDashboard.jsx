@@ -23,7 +23,7 @@ export default function AppraiseeDashboard() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await axiosClient.get(`/User/{id}?id=${userName}`);
+        const response = await axiosClient.get(`/User/${userName}`);
         setProfileData(response.data);
 
         // Redirect Board members (grade 0) to Board Dashboard

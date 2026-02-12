@@ -66,6 +66,7 @@ import BoardViewScorecard from "./views/BoardDashboard/BoardViewScorecard";
 import EvaluatorApproveResultsScorecard from "./views/Approved/EvaluatorApproveResultsScorecard";
 import EvaluatorViewApprovedResultsScorecard from "./views/EvaluatorViewResultsScorecard/EvaluatorViewResultsScorecard";
 import AppraiseeConfirmation from "./views/ResultScoreCard/AppraiseeConfirmation";
+import MyNotifications from "./views/MyNotifications/MyNotifications";
 
 const router = createBrowserRouter([
   {
@@ -218,6 +219,10 @@ const router = createBrowserRouter([
       {
         path: "/confirm-scorecard",
         element: <AppraiseeConfirmation />,
+      },
+      {
+        path: "/my-notifications",
+        element: <MyNotifications />,
       },
 
       {

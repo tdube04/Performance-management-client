@@ -1,0 +1,154 @@
+.my-notifications-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+
+    .header-content {
+      .page-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 0 0 8px 0;
+        font-size: 24px;
+        font-weight: 600;
+        color: #333;
+
+        svg {
+          font-size: 28px;
+          color: #15179c;
+        }
+      }
+
+      .page-subtitle {
+        margin: 0;
+        color: #666;
+        font-size: 14px;
+      }
+    }
+  }
+
+  .notifications-table-paper {
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #e0e0e0;
+  }
+
+  .title-cell {
+    .title-text {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 4px;
+
+      &.unread {
+        color: #15179c;
+        font-weight: 700;
+      }
+    }
+
+    .title-preview {
+      color: #666;
+      display: block;
+      max-width: 300px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 4px;
+
+    .action-btn {
+      color: #666;
+
+      &:hover {
+        color: #15179c;
+        background-color: rgba(21, 23, 156, 0.08);
+      }
+    }
+  }
+
+  .notification-details {
+    padding: 16px 0;
+
+    .detail-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 12px;
+    }
+
+    .detail-message {
+      font-size: 15px;
+      color: #555;
+      line-height: 1.6;
+      margin-bottom: 16px;
+      white-space: pre-wrap;
+    }
+
+    .detail-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .detail-dates {
+      background-color: #f8f9fa;
+      padding: 12px;
+      border-radius: 6px;
+      margin-top: 12px;
+
+      .date-item {
+        margin: 4px 0;
+        color: #555;
+
+        strong {
+          color: #333;
+        }
+      }
+    }
+  }
+
+  .dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 16px;
+    border-top: 1px solid #e0e0e0;
+
+    button {
+      min-width: 100px;
+    }
+  }
+
+  .loading {
+    text-align: center;
+    padding: 48px;
+    color: #6c757d;
+    font-size: 16px;
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .my-notifications-container {
+    padding: 16px;
+
+    .page-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+    }
+  }
+}

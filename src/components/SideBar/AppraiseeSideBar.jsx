@@ -63,7 +63,7 @@ const AppraiseeSideBar = () => {
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await axiosClient.get(`/User/{id}?id=${userName}`);
+        const response = await axiosClient.get(`/User/${userName}`);
         setProfileData(response.data);
         setGrade(response.data.grade);
         console.log(response.data.ec_number);

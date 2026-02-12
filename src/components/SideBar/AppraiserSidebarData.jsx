@@ -14,9 +14,12 @@ export const AppraiserSidebarData = [
     ),
     path: "",
     icon: <AiIcons.AiFillHome style={{ color: "#A6990D" }} />,
-    // iconClosed: <RiIcons.RiArrowDownSFill />,
-    // iconOpened: <RiIcons.RiArrowUpSFill />,
-
+    subNav: [],
+  },
+  {
+    title: "Notifications",
+    path: "/my-notifications",
+    icon: <AiIcons.AiOutlineBell />,
     subNav: [],
   },
   {
