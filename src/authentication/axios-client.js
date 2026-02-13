@@ -6,7 +6,7 @@ import { useStateContext } from "../context/ContextProvider";
 // })
 
 const axiosClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://10.18.5.66:8080/"
+  baseURL: import.meta.env.VITE_API_BASE_URL || "http://10.18.6.149:8080/"
 });
 
 axiosClient.interceptors.request.use((config) => {

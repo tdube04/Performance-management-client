@@ -109,9 +109,9 @@ export default function AdminHomePage() {
 
   return (
     <>
-      <div className="widgets">
+      {/* <div className="widgets">
         <Widgets numberOfStaff={numberOfStaff} />
-      </div>
+      </div> */}
 
       {/* <div className="listContainer">
         <div className="listTitle">All Users</div>

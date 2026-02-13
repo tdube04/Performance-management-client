@@ -63,6 +63,7 @@ import BoardPortalHomePage from "./views/AdminDashboard/BoardPortalHomePage";
 import BoardWorkplanList from "./views/BoardDashboard/BoardWorkplanList";
 import BoardScorecardList from "./views/BoardDashboard/BoardScorecardList";
 import BoardViewScorecard from "./views/BoardDashboard/BoardViewScorecard";
+import BoardViewWorkplan from "./views/BoardDashboard/BoardViewWorkplan";
 import EvaluatorApproveResultsScorecard from "./views/Approved/EvaluatorApproveResultsScorecard";
 import EvaluatorViewApprovedResultsScorecard from "./views/EvaluatorViewResultsScorecard/EvaluatorViewResultsScorecard";
 import AppraiseeConfirmation from "./views/ResultScoreCard/AppraiseeConfirmation";
@@ -540,6 +541,10 @@ const router = createBrowserRouter([
       {
         path: "/board-dashboard/view-scorecard", // New route for detailed view
         element: <BoardViewScorecard />,
+      },
+      {
+        path: "/board-dashboard/view-workplan", // New route for workplan detailed view
+        element: <BoardViewWorkplan />,
       },
     ],
   },

@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { MaterialReactTable } from "material-react-table";
-import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Typography, Chip } from "@mui/material";
+import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Typography, Chip, Tabs, Tab, Paper } from "@mui/material";
 import { darken } from "@mui/material";
 import axiosClient from "../../authentication/axios-client";
 import { useStateContext } from "../../context/ContextProvider";
+import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
@@ -31,10 +32,32 @@ export default function BoardWorkplanList() {
   const [rejectionReason, setRejectionReason] = useState("");
   const { userName } = useStateContext();
   const evaluationPeriod = getCurrentEvaluationPeriod();
+  const [currentTab, setCurrentTab] = useState(0);
+  const navigate = useNavigate();
+
+  const handleView = (workplan) => {
+    navigate("/board-dashboard/view-workplan", {
+      state: { workplan }
+    });
+  };
+
+  const handleTabChange = (event, newValue) => {
+    setCurrentTab(newValue);
+  };
+
+  const getStatusFromTab = (tabIndex) => {
+    switch (tabIndex) {
+      case 0: return "pendingApproval";
+      case 1: return "Approved";
+      case 2: return "Rejected";
+      case 3: return "ALL";
+      default: return "pendingApproval";
+    }
+  };
 
   useEffect(() => {
     fetchBoardWorkplans();
-  }, []);
+  }, [currentTab]);
 
   const fetchBoardWorkplans = async () => {
     setLoading(true);
@@ -42,7 +65,7 @@ export default function BoardWorkplanList() {
       const response = await axiosClient.get("/workplan/searchWorkplanForBoard", {
         params: {
           period: evaluationPeriod,
-          planStatus: "pendingApproval",
+          planStatus: getStatusFromTab(currentTab),
         },
       });
       setWorkplans(response.data || []);
@@ -165,17 +188,31 @@ export default function BoardWorkplanList() {
         size: 150,
         Cell: ({ cell }) => {
           const status = cell.getValue();
+          let chipColor = "default";
+          let chipLabel = status;
+
+          if (status === "pendingApproval") {
+            chipColor = "warning";
+            chipLabel = "Pending Board Approval";
+          } else if (status === "Approved") {
+            chipColor = "success";
+            chipLabel = "Approved";
+          } else if (status === "Rejected") {
+            chipColor = "error";
+            chipLabel = "Rejected";
+          }
+
           return (
             <Chip
-              label={status === "pendingApproval" ? "Pending Board Approval" : status}
-              color={status === "pendingApproval" ? "warning" : "default"}
+              label={chipLabel}
+              color={chipColor}
               size="small"
             />
           );
         },
       },
       {
-        accessorKey: "AreasOfPerformance",
+        accessorKey: "areasOfPerformance",
         header: "Performance Areas",
         size: 120,
         Cell: ({ cell }) => {
@@ -186,39 +223,60 @@ export default function BoardWorkplanList() {
       {
         accessorKey: "actions",
         header: "Actions",
-        size: 200,
-        Cell: ({ row }) => (
-          <Box sx={{ display: "flex", gap: 1 }}>
-            <Button
-              variant="contained"
-              size="small"
-              color="success"
-              startIcon={<CheckCircleIcon />}
-              onClick={() => handleApprove(row.original)}
-              sx={{
-                textTransform: "none",
-                fontSize: "12px",
-                padding: "4px 12px",
-              }}
-            >
-              Approve
-            </Button>
-            <Button
-              variant="contained"
-              size="small"
-              color="error"
-              startIcon={<CancelIcon />}
-              onClick={() => handleRejectClick(row.original)}
-              sx={{
-                textTransform: "none",
-                fontSize: "12px",
-                padding: "4px 12px",
-              }}
-            >
-              Reject
-            </Button>
-          </Box>
-        ),
+        size: 250,
+        Cell: ({ row }) => {
+          const isActionDisabled = row.original.workplanStatus !== "pendingApproval";
+          return (
+            <Box sx={{ display: "flex", gap: 1 }}>
+              <Button
+                variant="contained"
+                size="small"
+                color="info"
+                startIcon={<VisibilityIcon />}
+                onClick={() => handleView(row.original)}
+                sx={{
+                  textTransform: "none",
+                  fontSize: "12px",
+                  padding: "4px 12px",
+                }}
+              >
+                View Details
+              </Button>
+              <Button
+                variant="contained"
+                size="small"
+                disabled={isActionDisabled}
+                color="success"
+                startIcon={<CheckCircleIcon />}
+                onClick={() => handleApprove(row.original)}
+                sx={{
+                  textTransform: "none",
+                  fontSize: "12px",
+                  padding: "4px 12px",
+                  backgroundColor: isActionDisabled ? undefined : "#2e7d32"
+                }}
+              >
+                Approve
+              </Button>
+              <Button
+                variant="contained"
+                size="small"
+                disabled={isActionDisabled}
+                color="error"
+                startIcon={<CancelIcon />}
+                onClick={() => handleRejectClick(row.original)}
+                sx={{
+                  textTransform: "none",
+                  fontSize: "12px",
+                  padding: "4px 12px",
+                  backgroundColor: isActionDisabled ? undefined : "#d32f2f"
+                }}
+              >
+                Reject
+              </Button>
+            </Box>
+          );
+        },
       },
     ],
     []
@@ -233,6 +291,22 @@ export default function BoardWorkplanList() {
       <Typography variant="body1" sx={{ mb: 2, color: "#666" }}>
         Review and approve workplans submitted by the Commissioner General (Grade 1)
       </Typography>
+
+      <Paper sx={{ mb: 3, borderRadius: 2 }}>
+        <Tabs
+          value={currentTab}
+          onChange={handleTabChange}
+          indicatorColor="primary"
+          textColor="primary"
+          variant="fullWidth"
+          sx={{ borderBottom: 1, borderColor: "divider" }}
+        >
+          <Tab label="Pending Approval" sx={{ textTransform: "none", fontWeight: 600 }} />
+          <Tab label="Approved" sx={{ textTransform: "none", fontWeight: 600 }} />
+          <Tab label="Rejected" sx={{ textTransform: "none", fontWeight: 600 }} />
+          <Tab label="All History" sx={{ textTransform: "none", fontWeight: 600 }} />
+        </Tabs>
+      </Paper>
 
       <MaterialReactTable
         columns={columns}
