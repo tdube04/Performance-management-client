@@ -9,6 +9,7 @@ import { ProSidebarProvider } from "react-pro-sidebar";
 
 import AdminSideBar from "../SideBar/AdminSideBar";
 import BoardSideBar from "../SideBar/BoardSideBar";
+import QuarterStatusBadge from "../Quarters/QuarterStatusBadge";
 
 export default function BoardLayout() {
   const { token, setToken } = useStateContext();
@@ -27,6 +28,9 @@ export default function BoardLayout() {
 
       <div id="homeContainer" className="homeContainer">
         <NavBar />
+        
+        {/* Quarter Status Banner */}
+        <QuarterStatusBadge />
 
         <div className="recents">
           <main>

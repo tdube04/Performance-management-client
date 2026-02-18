@@ -6,6 +6,7 @@ import SideBar from "../SideBar/AppraiseeSideBar";
 import "./appraisee.scss";
 import NavBar from "../NavBar/NavBar";
 import PerformanceArea from "../../Widgets/PerformanceArea";
+import QuarterStatusBadge from "../Quarters/QuarterStatusBadge";
 
 export default function AppraiseeDashboard() {
   const [performanceAreas, setPerformanceAreas] = useState([]);
@@ -64,6 +65,9 @@ export default function AppraiseeDashboard() {
           <SideBar />
           <div id="homeContainer" className="homeContainer">
             <NavBar />
+            
+            {/* Quarter Status Banner - Shows current quarter status to all users */}
+            <QuarterStatusBadge />
 
             <div className="recents">
               <main>

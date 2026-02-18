@@ -129,6 +129,11 @@ export const SidebarData = [
         path: "/admin/open-quarter-evaluation-period",
         icon: <IoIcons.IoIosPaper />,
       },
+      {
+        title: "Workplan Template Archive",
+        path: "/admin/workplan-template-archive",
+        icon: <IoIcons.IoIosArchive />,
+      },
     ],
   },
   {

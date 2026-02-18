@@ -205,7 +205,7 @@ const WorkingScoreCard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosClient.get(`/User/{id}?id=${userName}`);
+        const response = await axiosClient.get(`/User/${userName}`);
         setProfileData(response.data);
         console.log("My Appraiser profile");
         console.log(response.data);
@@ -258,11 +258,11 @@ const WorkingScoreCard = () => {
           setResponseBody(appraiseeWorkplanArray);
           console.log(appraiseeWorkplanArray);
 
-          const areasOfPerformnce = response.data.content[0].areasOfPerformnce;
+          const areasOfPerformance = response.data.content[0].AreasOfPerformance;
 
-          console.log("performance Workplan", areasOfPerformnce);
+          console.log("performance Workplan", areasOfPerformance);
 
-          setPerformanceAreas(areasOfPerformnce);
+          setPerformanceAreas(areasOfPerformance);
           console.log(performanceAreas);
         } catch (error) {
           console.error(error);
@@ -345,8 +345,8 @@ const WorkingScoreCard = () => {
       //   (area) => area.performanceArea === selectedPerfomance
       // );
       const selectedPerformanceAreaRef =
-        workplanData && workplanData.areasOfPerformnce
-          ? workplanData.areasOfPerformnce.find(
+        workplanData && workplanData.AreasOfPerformance
+          ? workplanData.AreasOfPerformance.find(
               (area) => area.performanceArea === selectedPerfomance
             )
           : undefined;

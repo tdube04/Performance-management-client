@@ -53,7 +53,7 @@ import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
@@ -83,6 +83,8 @@ import * as XLSX from "xlsx";
 import ExcelJS from "exceljs";
 
 import { saveAs } from "file-saver";
+
+const getCurrentYear = () => new Date().getFullYear();
 
 function Row({
   program,
@@ -220,14 +222,14 @@ function Row({
                     </TableCell>
 
                     <TableCell align="right" style={{ width: "10%" }}>
-                      Annual Target for 2024(%)
+                      Annual Target for {currentYear}(%)
                     </TableCell>
                     <TableCell align="right" style={{ width: "10%" }}>
                       Allowable Variance
                     </TableCell>
 
                     <TableCell align="right" style={{ width: "10%" }}>
-                      Target for 2024(%)
+                      Target for {currentYear}(%)
                     </TableCell>
 
                     <TableCell align="right" style={{ width: "10%" }}>
@@ -243,7 +245,7 @@ function Row({
                       Actual Performance
                     </TableCell>
                     <TableCell align="right" style={{ width: "10%" }}>
-                      Appraisee Score for Q2 2024
+                      Appraisee Score for {evaluationPeriod}
                     </TableCell>
                     <TableCell align="right" style={{ width: "10%" }}>
                       Agreed Weighted Score
@@ -838,6 +840,7 @@ const getCurrentEvaluationPeriod = () => {
 
 export default function ResultScoreCard() {
   const navigate = useNavigate();
+  const { username } = useParams(); // Get username from URL if provided (for HC/admin viewing other users)
   const classes = useStyles();
   const [value, setValue] = React.useState(0);
   const [performanceAreas, setPerformanceAreas] = React.useState([]);
@@ -856,10 +859,23 @@ export default function ResultScoreCard() {
   const [clickedComment, setClickedComment] = useState(false);
   const [scorecardComment, setScorecardComment] = useState("");
 
-  const { evaluationPeriod, daysRemaining } = getCurrentEvaluationPeriod();
+  // State for backend quarter status
+  const [currentOpenQuarter, setCurrentOpenQuarter] = useState(null);
+  const [quarterLoading, setQuarterLoading] = useState(true);
+
+  // Get default calendar-based period as fallback
+  const defaultPeriod = getCurrentEvaluationPeriod();
+  const { evaluationPeriod, dateRange, daysRemaining } = defaultPeriod;
+
+  // Get current year for display
+  const currentYear = new Date().getFullYear();
 
   const [responseBody, setResponseBody] = useState([]);
   const { userName, setUserName, userType, setUserType } = useStateContext();
+  
+  // Use username from URL if provided (for HC/admin viewing), otherwise use logged-in user
+  const targetUserName = username || userName;
+  
   const [profileData, setProfileData] = useState(" ");
   const [error, setError] = useState(null);
   const indicatorColors = ["#d93025", "#1a73e8", "#188038", "#e37400"];
@@ -870,7 +886,33 @@ export default function ResultScoreCard() {
 
   const [planStatus, setPlanStatus] = useState("");
 
+  // Calculate period to use for display
+  const periodToUse = currentOpenQuarter || evaluationPeriod;
+
   const tabItem3Styles = useGmailTabItemStyles({ color: indicatorColors[2] });
+
+  // Fetch current open quarter from backend
+  useEffect(() => {
+    const fetchQuarterStatus = async () => {
+      try {
+        const response = await axiosClient.get("/evaluation_periods/current-status");
+        const quarterData = response.data;
+        
+        if (quarterData.hasOpenQuarter && quarterData.currentQuarter) {
+          setCurrentOpenQuarter(quarterData.currentQuarter);
+          console.log("Current open quarter from backend:", quarterData.currentQuarter);
+        } else {
+          console.log("No open quarter found in backend");
+        }
+        setQuarterLoading(false);
+      } catch (error) {
+        console.error("Error fetching quarter status:", error);
+        setQuarterLoading(false);
+      }
+    };
+
+    fetchQuarterStatus();
+  }, []);
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
@@ -900,30 +942,39 @@ export default function ResultScoreCard() {
       const appraiseeWorkplanArray = [];
       if (profileData) {
         try {
+          // Use backend quarter if available, otherwise fall back to calendar-based period
+          const periodToUse = currentOpenQuarter || evaluationPeriod;
+          
+          console.log("Fetching scorecards for period:", periodToUse);
+          console.log("Target username:", targetUserName);
+          
+          // Fetch scorecards WITH period filter - let backend handle the filtering
           const response = await axiosClient.get("/scorecard/searchScorecard", {
             params: {
-              period: evaluationPeriod,
-              username: userName,
+              username: targetUserName,
+              period: periodToUse,  // Pass period to backend for filtering
+              page: 0,
+              size: 10,
             },
           });
-          console.log("Appraisee Scorecard");
+          console.log("Scorecard API Response:");
           console.log(response.data);
-          appraiseeWorkplanArray.push(response.data);
-          setResponseBody(response.data);
+
+          // Use response directly - backend already filtered by period
+          const filteredScorecards = response.data;
+          appraiseeWorkplanArray.push(filteredScorecards);
+          setResponseBody(filteredScorecards);
           console.log(appraiseeWorkplanArray);
 
-          if (
-            response.data.content[0] &&
-            response.data.content[0].areasOfPerformance
-          ) {
-            const areasOfPerformance =
-              response.data.content[0].areasOfPerformance;
+          // Get the scorecard content
+          const scorecardContent = filteredScorecards?.content || (Array.isArray(filteredScorecards) ? filteredScorecards : []);
+          
+          if (scorecardContent.length > 0 && scorecardContent[0].areasOfPerformance) {
+            const areasOfPerformance = scorecardContent[0].areasOfPerformance;
             console.log("performance Scorecard", areasOfPerformance);
 
-            setPlanStatus(response.data.content[0].scorecardStatus);
-            setScorecardComment(
-              response.data.content[0].scorecardStatusComment
-            );
+            setPlanStatus(scorecardContent[0].scorecardStatus);
+            setScorecardComment(scorecardContent[0].scorecardStatusComment);
 
             if (areasOfPerformance && areasOfPerformance.length > 0) {
               const firstPerformanceArea = areasOfPerformance[0];
@@ -943,9 +994,18 @@ export default function ResultScoreCard() {
               console.log(totalPerformanceAreasScore);
             }
             handlePerformanceClick(selectedPerfomance, 0);
+          } else {
+            // No scorecard for current quarter - show empty state
+            console.log("No scorecard found for current quarter:", currentQuarter);
+            setPerformanceAreas([]);
+            setPlanStatus("");
+            setScorecardComment("");
           }
         } catch (error) {
           console.error(error);
+          // Show empty state on error
+          setPerformanceAreas([]);
+          setPlanStatus("");
         }
       }
     };
@@ -956,6 +1016,9 @@ export default function ResultScoreCard() {
     selectedPerfomance,
     totalWeightedScore,
     totalProgramsWeight,
+    currentOpenQuarter,
+    evaluationPeriod,
+    targetUserName
   ]);
 
   const handlePerformanceClick = async (area, index) => {
@@ -1643,7 +1706,7 @@ export default function ResultScoreCard() {
                 value === null ||
                 value === "" ||
                 (typeof value === "string" && value.trim() === "") ||
-                parseFloat(value) === 0
+                isNaN(parseFloat(value))
               );
             })
           )
@@ -1660,7 +1723,7 @@ export default function ResultScoreCard() {
           .get("/scorecard/searchScorecard", {
             params: {
               period: evaluationPeriod,
-              username: userName,
+              username: targetUserName,
             },
           })
           .then((res) => {
@@ -1747,7 +1810,9 @@ export default function ResultScoreCard() {
           <Typography className="" sx={{ fontSize: 12 }}>
             <strong>
               Current Year Of Assessment:{" "}
-              <span style={{ color: "#309366" }}>{evaluationPeriod}</span>
+              <span style={{ color: "#309366" }}>
+                {!quarterLoading && currentOpenQuarter ? currentOpenQuarter : evaluationPeriod}
+              </span>
             </strong>
           </Typography>
         </div>
@@ -1811,8 +1876,100 @@ export default function ResultScoreCard() {
           <option value="$">Complete</option>
         </select>{" "}
       </div> */}
+
+      {/* Form Fields Section */}
+      <div style={{ marginLeft: "90px", marginRight: "90px", marginTop: "30px", marginBottom: "40px" }}>
+        {/* Current Evaluation Period */}
+        <div style={{ marginBottom: "24px" }}>
+          <Typography style={{ fontSize: "11px", fontWeight: "600", color: "#999", marginBottom: "6px" }}>
+            Current Evaluation Period
+          </Typography>
+          <Typography style={{ fontSize: "14px", color: "#1a1a1a" }}>
+            {evaluationPeriod ? (() => {
+              const [year, quarter] = evaluationPeriod.split('-');
+              const periods = {
+                Q1: { start: '01 January', end: '31 March' },
+                Q2: { start: '01 April', end: '30 June' },
+                Q3: { start: '01 July', end: '30 September' },
+                Q4: { start: '01 October', end: '31 December' }
+              };
+              const period = periods[quarter] || {};
+              return `${period.start} - ${period.end} ${year}`;
+            })() : "_______________"}
+          </Typography>
+        </div>
+
+        {/* Name of Appraisee */}
+        <div style={{ marginBottom: "24px" }}>
+          <Typography style={{ fontSize: "11px", fontWeight: "600", color: "#999", marginBottom: "6px" }}>
+            {username ? "Employee Name" : "Name of Appraisee"}
+          </Typography>
+          <Typography style={{ fontSize: "14px", color: "#1a1a1a" }}>
+            {targetUserName || "_______________"}
+          </Typography>
+        </div>
+
+        {/* Date Submitted */}
+        <div style={{ marginBottom: "24px" }}>
+          <Typography style={{ fontSize: "11px", fontWeight: "600", color: "#999", marginBottom: "6px" }}>
+            Date Submitted
+          </Typography>
+          <Typography style={{ fontSize: "14px", color: "#1a1a1a" }}>
+            {responseBody && responseBody.content && responseBody.content[0] && responseBody.content[0].dateSubmitted 
+              ? new Date(responseBody.content[0].dateSubmitted).toLocaleString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+              : "_______________"}
+          </Typography>
+        </div>
+
+        {/* Name of Appraiser */}
+        <div style={{ marginBottom: "24px" }}>
+          <Typography style={{ fontSize: "11px", fontWeight: "600", color: "#999", marginBottom: "6px" }}>
+            Name of Appraiser
+          </Typography>
+          <Typography style={{ fontSize: "14px", color: "#1a1a1a" }}>
+            {responseBody && responseBody.content && responseBody.content[0] && responseBody.content[0].evaluator_email 
+              ? responseBody.content[0].evaluator_email 
+              : "_______________"}
+          </Typography>
+        </div>
+
+        {/* Date Approved */}
+        <div style={{ marginBottom: "24px" }}>
+          <Typography style={{ fontSize: "11px", fontWeight: "600", color: "#999", marginBottom: "6px" }}>
+            Date Approved
+          </Typography>
+          <Typography style={{ fontSize: "14px", color: "#1a1a1a" }}>
+            {responseBody && responseBody.content && responseBody.content[0] && responseBody.content[0].dateApproved 
+              ? new Date(responseBody.content[0].dateApproved).toLocaleString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+              : "_______________"}
+          </Typography>
+        </div>
+      </div>
+
       <div className={classes.root}>
-        <Box
+        {/* Show message when no scorecard found for current quarter */}
+        {!quarterLoading && performanceAreas.length === 0 && (
+          <Box sx={{ ml: 4, mt: 2, p: 3, bgcolor: '#fff3e0', borderRadius: 1 }}>
+            <Typography variant="h6" color="error" gutterBottom>
+              No Result Scorecard Found
+            </Typography>
+            <Typography variant="body1">
+              There is no result scorecard for the period: <strong>{periodToUse || evaluationPeriod}</strong>.
+              {currentOpenQuarter ? 
+                ` The current open quarter is ${currentOpenQuarter}.` : 
+                " No quarter is currently open in the system."}
+            </Typography>
+            {!currentOpenQuarter && (
+              <Typography variant="body2" sx={{ mt: 1 }}>
+                Please contact the administrator to open a new quarter.
+              </Typography>
+            )}
+          </Box>
+        )}
+
+        {performanceAreas.length > 0 && (
+          <>
+            <Box
           sx={{
             mt: 1,
             ml: 4,
@@ -1851,7 +2008,7 @@ export default function ResultScoreCard() {
           <Tab label="Signatures" /> */}
           </Tabs>
         </Box>
-
+<>
         {performanceAreas.map((area, index) => (
           <TabPanel key={index} value={value} index={index}>
             <div style={{ display: "flex", alignItems: "center" }}>
@@ -1978,7 +2135,7 @@ export default function ResultScoreCard() {
                 Integrated Performance Agreement - Evaluation of Outcomes
               </Typography>
               <Typography style={{}}>
-                Current Evaluation Period : 01 July - 30 September 2024
+                Current Evaluation Period : 01 July - 30 September {currentYear}
               </Typography>
               <Typography>Name of Appraiser : _____________</Typography>
 
@@ -1993,10 +2150,11 @@ export default function ResultScoreCard() {
                   className="btn-saveWorkPlan"
                   style={{ marginLeft: "710px", marginTop: "" }}
                 >
-                  {planStatus !== "ResultsScorecard" &&
-                  planStatus !== "Rejected" &&
-                  planStatus !== "Approved" ? (
-                    <>
+                  {/* Hide submit buttons when viewing another user's scorecard (HC/admin view) */}
+                  {!username && (
+                    planStatus !== "ResultsScorecard" &&
+                    planStatus !== "Rejected" &&
+                    planStatus !== "Approved" ? (
                       <button
                         onClick={handleSubmitResultScorecard}
                         className="workplan-btn"
@@ -2009,58 +2167,58 @@ export default function ResultScoreCard() {
                       >
                         Submit For Approval
                       </button>
-                    </>
-                  ) : planStatus === "Approved" ? (
-                    <div
-                      className="btn-saveWorkPlan"
-                      style={{
-                        display: "flex",
-                        marginLeft: "110px",
-                        marginTop: "-70px",
-                        width: "400px",
-                      }}
-                    >
+                    ) : planStatus === "Approved" ? (
+                      <div
+                        className="btn-saveWorkPlan"
+                        style={{
+                          display: "flex",
+                          marginLeft: "110px",
+                          marginTop: "-70px",
+                          width: "400px",
+                        }}
+                      >
+                        <p
+                          style={{
+                            borderRadius: "9px",
+                            height: "25px",
+                            width: "165%",
+                            backgroundColor: "#69b33e",
+                            paddingLeft: "19px",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          Result Scorecard Approved!
+                        </p>
+                      </div>
+                    ) : planStatus === "Rejected" ? (
+                      <button
+                        onClick={handleSubmitResultScorecard}
+                        className="workplan-btn"
+                        style={{
+                          borderRadius: "25px",
+                          marginLeft: "180px",
+                          width: "200px",
+                          marginTop: "-70px",
+                        }}
+                      >
+                        Re-Submit For Approval
+                      </button>
+                    ) : planStatus === "ResultsScorecard" ? (
                       <p
                         style={{
                           borderRadius: "9px",
                           height: "25px",
-                          width: "165%",
+                          width: "190px",
                           backgroundColor: "#69b33e",
-                          paddingLeft: "19px",
+                          paddingLeft: "16px",
                           fontWeight: "bold",
+                          marginTop: "-70px",
                         }}
                       >
-                        Result Scorecard Approved!
+                        Waiting For Approval!
                       </p>
-                    </div>
-                  ) : planStatus === "Rejected" ? (
-                    <button
-                      onClick={handleSubmitResultScorecard}
-                      className="workplan-btn"
-                      style={{
-                        borderRadius: "25px",
-                        marginLeft: "180px",
-                        width: "200px",
-                        marginTop: "-70px",
-                      }}
-                    >
-                      Re-Submit For Approval
-                    </button>
-                  ) : planStatus === "ResultsScorecard" ? (
-                    <p
-                      style={{
-                        borderRadius: "9px",
-                        height: "25px",
-                        width: "190px",
-                        backgroundColor: "#69b33e",
-                        paddingLeft: "16px",
-                        fontWeight: "bold",
-                        marginTop: "-70px",
-                      }}
-                    >
-                      Waiting For Approval!
-                    </p>
-                  ) : null}
+                    ) : null
+                  )}
                 </div>
 
                 {/* <div
@@ -2087,6 +2245,9 @@ export default function ResultScoreCard() {
             </div>
           </TabPanel>
         ))}
+        </>
+          </>
+        )}
       </div>
     </>
   );

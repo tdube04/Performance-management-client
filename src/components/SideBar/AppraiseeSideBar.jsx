@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import styled from "styled-components";
 import { Link } from "react-router-dom";
 import * as FaIcons from "react-icons/fa";
@@ -11,6 +11,7 @@ import axiosClient from "../../authentication/axios-client";
 import { useStateContext } from "../../context/ContextProvider";
 import { AppraiseeSidebarData2 } from "./AppraiseeSidebarData2";
 import { AppraiserSidebarData2 } from "./AppraiserSidebarData2";
+import useQuarterNavigationStatus from "../../hooks/useQuarterNavigationStatus";
 
 const Nav = styled.div`
   background: #15179c;
@@ -60,6 +61,9 @@ const AppraiseeSideBar = () => {
   const showSidebar = () => setSidebar(!sidebar);
   const [grade, setGrade] = useState(null);
 
+  // Use the quarter navigation status hook
+  const { hasOpenQuarter, currentQuarterStatus, canCreateWorkplan, workplanStatus, loading: quarterLoading } = useQuarterNavigationStatus(userName);
+
   useEffect(() => {
     async function fetchData() {
       try {
@@ -78,7 +82,59 @@ const AppraiseeSideBar = () => {
     fetchData();
   }, []);
 
-  const sidebarData =
+  // Function to filter sidebar data based on quarter status and workplan status
+  const filterSidebarData = (data) => {
+    if (!data) return [];
+    
+    const isGrade1 = profileData?.grade === "1";
+    const hasAppraisees = profileData?.apprainees?.length > 0 || profileData?.appraisees?.length > 0;
+    
+    return data.map(item => {
+      // Handle subNav items
+      if (item.subNav && item.subNav.length > 0) {
+        const filteredSubNav = item.subNav.map(subItem => {
+          // Filter "Create Work Plan" based on quarter and workplan status
+          if (subItem.title === "Create Work Plan") {
+            // Only CG (grade 1) can create work plans
+            // Can only create if quarter is open AND (no workplan OR workplan was rejected)
+            if (!isGrade1) {
+              return null; // Hide for non-CG users
+            }
+            if (!hasOpenQuarter) {
+              return null; // Hide when quarter is closed
+            }
+            if (!canCreateWorkplan && workplanStatus && workplanStatus !== "Rejected") {
+              return null; // Hide if workplan exists and is not rejected
+            }
+            return subItem;
+          }
+          
+          // Filter scorecard items based on workplan approval status
+          if (subItem.title?.includes("Scorecard") || subItem.title?.includes("Working Scorecard")) {
+            // For scorecards, user needs approved workplan OR no workplan exists
+            // If quarter is closed, hide scorecard creation
+            if (!hasOpenQuarter && subItem.title === " View Working Scorecard ") {
+              return null;
+            }
+            return subItem;
+          }
+          
+          return subItem;
+        }).filter(Boolean); // Remove null entries
+        
+        // If all subNav items are filtered out, exclude the parent item too
+        if (filteredSubNav.length === 0) {
+          return null;
+        }
+        
+        return { ...item, subNav: filteredSubNav };
+      }
+      return item;
+    }).filter(Boolean); // Remove null entries
+  };
+
+  // Determine base sidebar data
+  const baseSidebarData =
   profileData?.grade === "1"
     ? (profileData?.appraisees?.length > 0
         ? AppraiserSidebarData
@@ -86,6 +142,9 @@ const AppraiseeSideBar = () => {
     : (profileData?.appraisees?.length > 0
         ? AppraiserSidebarData2
         : AppraiseeSidebarData2);
+
+  // Apply filters to sidebar data
+  const sidebarData = useMemo(() => filterSidebarData(baseSidebarData), [baseSidebarData, hasOpenQuarter, canCreateWorkplan, workplanStatus, profileData?.grade]);
   return (
     <>
       <IconContext.Provider value={{ color: "#00cc44" }}>

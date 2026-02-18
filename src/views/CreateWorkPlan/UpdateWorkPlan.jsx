@@ -402,8 +402,8 @@ const UpdateWorkPlan = () => {
       setProgramWeight(myselectedProgram.weight);
       ////////////////////////////////////////////////////////////////////////////////////////////////
       const selectedPerformanceAreaRef =
-        workplanData && workplanData.areasOfPerformnce
-          ? workplanData.areasOfPerformnce.find(
+        workplanData && workplanData.AreasOfPerformance
+          ? workplanData.AreasOfPerformance.find(
               (area) => area.performanceArea === selectedPerfomance
             )
           : undefined;

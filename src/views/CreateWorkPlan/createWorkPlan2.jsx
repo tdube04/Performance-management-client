@@ -83,6 +83,33 @@ const Item = styled(Paper)(({ theme }) => ({
 export default function CreateWorkPlan() {
   const classes = useStyles();
 
+  // State for backend quarter status
+  const [currentOpenQuarter, setCurrentOpenQuarter] = useState(null);
+  const [quarterLoading, setQuarterLoading] = useState(true);
+
+  // Fetch current open quarter from backend
+  useEffect(() => {
+    const fetchQuarterStatus = async () => {
+      try {
+        const response = await axiosClient.get("/evaluation_periods/current-status");
+        const quarterData = response.data;
+        
+        if (quarterData.hasOpenQuarter && quarterData.currentQuarter) {
+          setCurrentOpenQuarter(quarterData.currentQuarter);
+          console.log("Current open quarter from backend:", quarterData.currentQuarter);
+        } else {
+          console.log("No open quarter found in backend");
+        }
+        setQuarterLoading(false);
+      } catch (error) {
+        console.error("Error fetching quarter status:", error);
+        setQuarterLoading(false);
+      }
+    };
+
+    fetchQuarterStatus();
+  }, []);
+
   const [data, setData] = useState([]);
 
   const [selectedPerfomance, setSelectedPerfomance] = useState([]);
@@ -193,8 +220,8 @@ export default function CreateWorkPlan() {
         })
         .then((response) => {
           console.log("Appraisee Workplan");
-          console.log(response.data.content[1].areasOfPerformnce);
-          setScorecardData(response.data.content[1].areasOfPerformnce);
+          console.log(response.data.content[1].AreasOfPerformance);
+          setScorecardData(response.data.content[1].AreasOfPerformance);
         });
     }
   }, [profileData]);
@@ -274,6 +301,12 @@ export default function CreateWorkPlan() {
   const handleSubmitOutcome = (e) => {
     e.preventDefault();
 
+    // Validate that the performance area has a valid ID
+    if (!selectedPerfomance || !selectedPerfomance.id) {
+      setMessage("Performance area ID is missing. Please refresh the page and try again.");
+      return;
+    }
+
     let errors = [];
 
     if (!outcomeRef.current.value) {
@@ -347,7 +380,7 @@ export default function CreateWorkPlan() {
     Object.assign(updatedPerformanceArea, newPerformance);
 
     axiosClient
-      .post("Performance_Area/save/", updatedPerformanceArea)
+      .post("Performance_Area/save", updatedPerformanceArea)
       .then((res) => {
         console.log(res);
         swal({
@@ -416,7 +449,9 @@ export default function CreateWorkPlan() {
       signatureStatus: "signed",
     };
 
-    const evaluationPeriod = getCurrentEvaluationPeriod().evaluationPeriod;
+    // Use backend quarter if available, otherwise fall back to calendar-based period
+    const evaluationPeriod = currentOpenQuarter || getCurrentEvaluationPeriod().evaluationPeriod;
+    console.log("Using evaluation period:", evaluationPeriod);
 
     const evaluator = {
       ecNumber: "5660",
@@ -453,14 +488,14 @@ export default function CreateWorkPlan() {
           console.log("My ID: " + res.data.content[1].id);
           const scorecardId = res.data.content[1].id;
           const existingAreasOfPerformance =
-            res.data.content[1].areasOfPerformnce || [];
+            res.data.content[1].AreasOfPerformance || [];
           console.log("My Areas: ");
-          console.log(res.data.content[1].areasOfPerformnce);
+          console.log(res.data.content[1].AreasOfPerformance);
           const areasOfPerformance = [
             ...existingAreasOfPerformance,
             newPerformanceArea,
           ];
-          const updatedScorecard = scorecard.content[1].areasOfPerformnce.push(
+          const updatedScorecard = scorecard.content[1].AreasOfPerformance.push(
             areasOfPerformance
           );
           try {
@@ -564,7 +599,7 @@ export default function CreateWorkPlan() {
   //     signature: "signed",
   //     signatureStatus: "signed",
   //   };
-  //   const areasOfPerformnce = [updatedPerformanceArea];
+  //   const areasOfPerformance = [updatedPerformanceArea];
   //   const employee = {
   //     ecNumber: "5134",
   //     email: "amuchoko",
@@ -594,7 +629,7 @@ export default function CreateWorkPlan() {
 
   //   const data = {
   //     appraiser,
-  //     areasOfPerformnce,
+  //     AreasOfPerformance,
   //     employee,
   //     evaluationPeriod,
   //     evaluator,
@@ -623,8 +658,7 @@ export default function CreateWorkPlan() {
   };
 
   return (
-    <>
-      <div>
+    <div>
         <Paper
           elevation={1}
           sx={{
@@ -640,7 +674,6 @@ export default function CreateWorkPlan() {
           {" "}
           <Typography sx={{ ml: 7 }}>CREATE WORKPLAN</Typography>
         </Paper>
-      </div>
       <Box display="flex" style={{ height: "700px" }}>
         <div className="" style={{ overflow: "scroll" }}>
           <Box
@@ -1124,7 +1157,7 @@ export default function CreateWorkPlan() {
             </Dialog>
           </div>
         )}
-      </Box>
-    </>
+        </div>
+    </div>
   );
 }

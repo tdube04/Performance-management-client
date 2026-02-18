@@ -219,7 +219,7 @@ const AddNewIndicator = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosClient.get(`/User/{id}?id=${userName}`);
+        const response = await axiosClient.get(`/User/${userName}`);
         setProfileData(response.data);
         setResources(response.data.appraisees);
         console.log("My Appraiser resource", resources);

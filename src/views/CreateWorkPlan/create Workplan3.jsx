@@ -547,10 +547,10 @@ const CreateWorkPlan = () => {
           console.log("My ID: " + res.data.content[0].id);
           const scorecardId = res.data.content[0].id;
           const existingAreasOfPerformance =
-            res.data.content[0].areasOfPerformnce || [];
+            res.data.content[0].AreasOfPerformance || [];
           console.log("My Areas: ");
-          console.log(res.data.content[0].areasOfPerformnce);
-          const areasOfPerformnce = [
+          console.log(res.data.content[0].AreasOfPerformance);
+          const areasOfPerformance = [
             ...existingAreasOfPerformance,
             newPerformanceArea,
           ];
@@ -559,7 +559,7 @@ const CreateWorkPlan = () => {
           // );
           const updatedScorecard = {
             ...scorecard.content[0],
-            areasOfPerformnce: areasOfPerformnce,
+            AreasOfPerformance: areasOfPerformance,
           };
 
           console.log("updatedScorecard", updatedScorecard);

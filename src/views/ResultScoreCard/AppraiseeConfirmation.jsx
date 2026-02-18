@@ -148,6 +148,9 @@ const AppraiseeConfirmation = () => {
           </div>
         `,
         confirmButtonText: "View Dashboard",
+      }).then(() => {
+        // Reload the page after confirmation
+        window.location.reload();
       });
 
       setHasConfirmed(true);

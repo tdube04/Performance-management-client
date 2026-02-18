@@ -212,11 +212,11 @@ export default function BoardScorecardList() {
                 },
             },
             {
-                accessorKey: "AreasOfPerformance",
+                accessorKey: "areasOfPerformance",
                 header: "Performance Areas",
                 size: 120,
-                Cell: ({ cell }) => {
-                    const areas = cell.getValue() || [];
+                Cell: ({ row }) => {
+                    const areas = row.original.areasOfPerformance || row.original.AreasOfPerformance || [];
                     return <Typography variant="body2">{areas.length} areas</Typography>;
                 },
             },

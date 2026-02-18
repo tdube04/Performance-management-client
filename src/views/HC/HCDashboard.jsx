@@ -3,6 +3,7 @@ import { MaterialReactTable } from "material-react-table";
 import { Link, useNavigate } from "react-router-dom";
 import axiosClient from "../../authentication/axios-client";
 import { useStateContext } from "../../context/ContextProvider";
+import Swal from "sweetalert2";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
@@ -98,9 +99,12 @@ const HCDashboard = () => {
     complianceRate: 0,
     avgSubmissionTime: 0,
     topPerformers: [],
+    bottomPerformers: [],
     divisionStats: {},
     gradeStats: {},
-    recentSubmissions: []
+    recentSubmissions: [],
+    scoreDistribution: {},
+    forwardedToHC: 0
   });
 
   // Animation states
@@ -162,76 +166,121 @@ const HCDashboard = () => {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await axiosClient.get("/getAllUsers");
-      const usersData = Array.isArray(response.data) ? response.data : response.data.content || [];
-      setUsers(usersData);
-
-      // Calculate comprehensive stats
-      const submitted = usersData.filter(u => u.hasSubmittedScorecard).length;
-      const pending = usersData.filter(u => !u.hasSubmittedScorecard).length;
-      const postQuarterEnd = usersData.filter(u => u.submittedAfterQuarterEnd).length;
-      const complianceRate = usersData.length > 0 ? Math.round((submitted / usersData.length) * 100) : 0;
-
-      // Calculate division stats
-      const divisionStats = {};
-      usersData.forEach(user => {
-        const division = user.divisionName || "Unknown";
-        if (!divisionStats[division]) {
-          divisionStats[division] = { total: 0, submitted: 0, pending: 0 };
-        }
-        divisionStats[division].total++;
-        if (user.hasSubmittedScorecard) {
-          divisionStats[division].submitted++;
+      
+      // Fetch scorecard-based stats from the new endpoint
+      try {
+        const statsResponse = await axiosClient.get("/scorecard/hc/dashboardStats", {
+          params: {}
+        });
+        const scorecardStats = statsResponse.data;
+        
+        // Use userScorecardList from the stats response if available
+        let usersData = [];
+        if (scorecardStats.userScorecardList && scorecardStats.userScorecardList.length > 0) {
+          // Use the user-scorecard mapping from backend (most accurate)
+          usersData = scorecardStats.userScorecardList;
         } else {
-          divisionStats[division].pending++;
+          // Fallback to /getAllUsers if no userScorecardList
+          const usersResponse = await axiosClient.get("/getAllUsers");
+          usersData = Array.isArray(usersResponse.data) ? usersResponse.data : usersResponse.data.content || [];
         }
-      });
-
-      // Calculate grade stats
-      const gradeStats = {};
-      usersData.forEach(user => {
-        const grade = user.grade || "Unknown";
-        if (!gradeStats[grade]) {
-          gradeStats[grade] = { total: 0, submitted: 0, pending: 0 };
+        setUsers(usersData);
+        
+        // Update stats with scorecard-based data
+        setStats({
+          totalUsers: scorecardStats.totalUsers || usersData.length,
+          submitted: scorecardStats.submitted || 0,
+          pending: scorecardStats.pending || 0,
+          postQuarterEnd: scorecardStats.postQuarterEnd || 0,
+          complianceRate: scorecardStats.complianceRate || 0,
+          avgSubmissionTime: 5,
+          divisionStats: scorecardStats.divisionStats || {},
+          gradeStats: scorecardStats.gradeStats || {},
+          topPerformers: scorecardStats.topPerformers || [],
+          bottomPerformers: scorecardStats.bottomPerformers || [],
+          recentSubmissions: scorecardStats.recentSubmissions || [],
+          scoreDistribution: scorecardStats.scoreDistribution || {},
+          forwardedToHC: scorecardStats.forwardedToHC || 0
+        });
+      } catch (statsErr) {
+        console.error("Error fetching scorecard stats:", statsErr);
+        // Fallback to user-based data
+        try {
+          const response = await axiosClient.get("/getAllUsers");
+          const usersData = Array.isArray(response.data) ? response.data : response.data.content || [];
+          setUsers(usersData);
+          calculateUserStats(usersData);
+        } catch (err) {
+          console.error("Error fetching users:", err);
         }
-        gradeStats[grade].total++;
-        if (user.hasSubmittedScorecard) {
-          gradeStats[grade].submitted++;
-        } else {
-          gradeStats[grade].pending++;
-        }
-      });
-
-      // Get top performers
-      const topPerformers = usersData
-        .filter(u => u.hasSubmittedScorecard && u.submissionDate)
-        .sort((a, b) => new Date(a.submissionDate) - new Date(b.submissionDate))
-        .slice(0, 5);
-
-      // Get recent submissions
-      const recentSubmissions = usersData
-        .filter(u => u.hasSubmittedScorecard && u.submissionDate)
-        .sort((a, b) => new Date(b.submissionDate) - new Date(a.submissionDate))
-        .slice(0, 10);
-
-      setStats({
-        totalUsers: usersData.length,
-        submitted,
-        pending,
-        postQuarterEnd,
-        complianceRate,
-        avgSubmissionTime: 5,
-        divisionStats,
-        gradeStats,
-        topPerformers,
-        recentSubmissions
-      });
-
+      }
+      
       setLoading(false);
     } catch (err) {
       setError(err.message);
       setLoading(false);
     }
+  };
+
+  // Separate function to calculate user-based stats as fallback
+  const calculateUserStats = (usersData) => {
+    const submitted = usersData.filter(u => u.hasSubmittedScorecard).length;
+    const pending = usersData.filter(u => !u.hasSubmittedScorecard).length;
+    const postQuarterEnd = usersData.filter(u => u.submittedAfterQuarterEnd).length;
+    const complianceRate = usersData.length > 0 ? Math.round((submitted / usersData.length) * 100) : 0;
+
+    const divisionStats = {};
+    usersData.forEach(user => {
+      const division = user.divisionName || "Unknown";
+      if (!divisionStats[division]) {
+        divisionStats[division] = { total: 0, submitted: 0, pending: 0 };
+      }
+      divisionStats[division].total++;
+      if (user.hasSubmittedScorecard) {
+        divisionStats[division].submitted++;
+      } else {
+        divisionStats[division].pending++;
+      }
+    });
+
+    const gradeStats = {};
+    usersData.forEach(user => {
+      const grade = user.grade || "Unknown";
+      if (!gradeStats[grade]) {
+        gradeStats[grade] = { total: 0, submitted: 0, pending: 0 };
+      }
+      gradeStats[grade].total++;
+      if (user.hasSubmittedScorecard) {
+        gradeStats[grade].submitted++;
+      } else {
+        gradeStats[grade].pending++;
+      }
+    });
+
+    const topPerformers = usersData
+      .filter(u => u.hasSubmittedScorecard && u.submissionDate)
+      .sort((a, b) => new Date(a.submissionDate) - new Date(b.submissionDate))
+      .slice(0, 5);
+
+    const recentSubmissions = usersData
+      .filter(u => u.hasSubmittedScorecard && u.submissionDate)
+      .sort((a, b) => new Date(b.submissionDate) - new Date(a.submissionDate))
+      .slice(0, 10);
+
+    setStats({
+      totalUsers: usersData.length,
+      submitted,
+      pending,
+      postQuarterEnd,
+      complianceRate,
+      avgSubmissionTime: 5,
+      divisionStats,
+      gradeStats,
+      topPerformers,
+      recentSubmissions,
+      scoreDistribution: {},
+      forwardedToHC: 0
+    });
   };
 
   const fetchForwardedScorecards = async () => {
@@ -251,6 +300,45 @@ const HCDashboard = () => {
     } catch (err) {
       console.error("Error fetching forwarded scorecards:", err);
       setForwardedLoading(false);
+    }
+  };
+
+  const handleMarkAsReceived = async (scorecard) => {
+    const result = await Swal.fire({
+      title: "Mark as Received?",
+      text: `Mark scorecard for ${scorecard.user_email} as received?`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#28a745",
+      cancelButtonColor: "#6c757d",
+      confirmButtonText: "Yes, Mark as Received",
+      cancelButtonText: "Cancel",
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const response = await axiosClient.get(`/scorecard/hc/markReceived/${scorecard.id}`, {
+          params: {
+            hcEmail: userName,
+          },
+        });
+
+        Swal.fire({
+          icon: "success",
+          title: "Received!",
+          text: response.data,
+          timer: 3000,
+        });
+
+        fetchForwardedScorecards(); // Refresh the list
+      } catch (error) {
+        console.error("Error marking scorecard as received:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: error.response?.data || "Failed to mark scorecard as received",
+        });
+      }
     }
   };
 
@@ -284,6 +372,12 @@ const HCDashboard = () => {
         filtered = filtered.filter(user => !user.hasSubmittedScorecard);
       } else if (submissionStatus === "post-quarter") {
         filtered = filtered.filter(user => user.submittedAfterQuarterEnd);
+      } else if (submissionStatus === "approved") {
+        filtered = filtered.filter(user => user.scorecardStatus === 'Approved');
+      } else if (submissionStatus === "results") {
+        filtered = filtered.filter(user => user.scorecardStatus === 'ResultsScorecard');
+      } else if (submissionStatus === "forwarded") {
+        filtered = filtered.filter(user => user.forwardedToHC === true);
       }
     }
 
@@ -332,6 +426,38 @@ const HCDashboard = () => {
         borderRadius: 8,
       }
     ]
+  };
+
+  // Chart data for score distribution
+  const scoreDistributionChartData = {
+    labels: ['6 - Exceeds (90%+)', '5 - Above Target (80-89%)', '4 - Met Target (70-79%)', '3 - Below Target (60-69%)', '2 - Below Variance (50-59%)', '1 - Not Met (<50%)'],
+    datasets: [{
+      data: [
+        stats.scoreDistribution?.score6 || 0,
+        stats.scoreDistribution?.score5 || 0,
+        stats.scoreDistribution?.score4 || 0,
+        stats.scoreDistribution?.score3 || 0,
+        stats.scoreDistribution?.score2 || 0,
+        stats.scoreDistribution?.score1 || 0
+      ],
+      backgroundColor: [
+        'rgba(76, 175, 80, 0.8)',   // Green - Exceeds
+        'rgba(139, 195, 74, 0.8)',  // Light Green - Above
+        'rgba(255, 193, 7, 0.8)',   // Yellow - Met
+        'rgba(255, 152, 0, 0.8)',   // Orange - Below
+        'rgba(244, 67, 54, 0.8)',   // Red - Below Variance
+        'rgba(183, 28, 28, 0.8)'    // Dark Red - Not Met
+      ],
+      borderColor: [
+        'rgba(76, 175, 80, 1)',
+        'rgba(139, 195, 74, 1)',
+        'rgba(255, 193, 7, 1)',
+        'rgba(255, 152, 0, 1)',
+        'rgba(244, 67, 54, 1)',
+        'rgba(183, 28, 28, 1)'
+      ],
+      borderWidth: 2,
+    }]
   };
 
   const doughnutOptions = {
@@ -590,10 +716,33 @@ const HCDashboard = () => {
             <Card className="kpi-card gradient-orange">
               <CardContent>
                 <Box className="kpi-icon orange">
-                  <AiIcons.AiOutlineCalendar />
+                  <MdIcons.MdForward />
                 </Box>
                 <Box className="kpi-content">
                   <Typography variant="h3" className="kpi-value orange">
+                    {stats.forwardedToHC || 0}
+                  </Typography>
+                  <Typography variant="body2" className="kpi-label">
+                    Forwarded to HC
+                  </Typography>
+                </Box>
+                <Box className="kpi-trend positive">
+                  <MdIcons.MdCheckCircle /> Ready for Review
+                </Box>
+              </CardContent>
+            </Card>
+          </Grow>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={2.4}>
+          <Grow in={true} timeout={550}>
+            <Card className="kpi-card gradient-red">
+              <CardContent>
+                <Box className="kpi-icon warning">
+                  <MdIcons.MdWarning />
+                </Box>
+                <Box className="kpi-content">
+                  <Typography variant="h3" className="kpi-value warning">
                     {animatedStats.postQuarterEnd}
                   </Typography>
                   <Typography variant="body2" className="kpi-label">
@@ -637,7 +786,33 @@ const HCDashboard = () => {
           </Slide>
         </Grid>
 
-        <Grid item xs={12} md={8}>
+        <Grid item xs={12} md={4}>
+          <Slide direction="up" in={true} timeout={650}>
+            <Card className="chart-card">
+              <CardContent>
+                <Box className="chart-header">
+                  <Typography variant="h6" className="chart-title">
+                    <MdIcons.MdBarChart /> Score Distribution
+                  </Typography>
+                  <Chip label="By Rating" color="secondary" size="small" />
+                </Box>
+                <Box className="chart-body doughnut-chart">
+                  <Doughnut data={scoreDistributionChartData} options={doughnutOptions} />
+                  <Box className="chart-center">
+                    <Typography variant="h4" className="center-value">
+                      {stats.submitted}
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      Scored
+                    </Typography>
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
+          </Slide>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
           <Slide direction="up" in={true} timeout={700}>
             <Card className="chart-card">
               <CardContent>
@@ -726,6 +901,9 @@ const HCDashboard = () => {
                       <MenuItem value="all">All Status</MenuItem>
                       <MenuItem value="submitted">Submitted</MenuItem>
                       <MenuItem value="pending">Pending</MenuItem>
+                      <MenuItem value="approved">Approved</MenuItem>
+                      <MenuItem value="results">Results Scorecard</MenuItem>
+                      <MenuItem value="forwarded">Forwarded to HC</MenuItem>
                       <MenuItem value="post-quarter">Post-Q End</MenuItem>
                     </Select>
                   </FormControl>
@@ -803,11 +981,22 @@ const HCDashboard = () => {
                   {
                     accessorKey: "status",
                     header: "Status",
-                    size: 120,
+                    size: 150,
                     Cell: ({ row }) => {
-                      if (row.original.submittedAfterQuarterEnd) {
+                      const { scorecardStatus, submittedAfterQuarterEnd, hasSubmittedScorecard, forwardedToHC } = row.original;
+                      
+                      // Show specific status based on scorecard status
+                      if (scorecardStatus === 'Approved') {
+                        return <Chip label="Approved" color="success" size="small" icon={<FaIcons.FaCheckCircle />} />;
+                      } else if (scorecardStatus === 'ResultsScorecard') {
+                        return <Chip label="Results Scorecard" color="info" size="small" icon={<FaIcons.FaFileAlt />} />;
+                      } else if (scorecardStatus === 'WorkingScorecard') {
+                        return <Chip label="Working Scorecard" color="warning" size="small" icon={<FaIcons.FaEdit />} />;
+                      } else if (forwardedToHC) {
+                        return <Chip label="Forwarded to HC" color="primary" size="small" icon={<MdIcons.MdForward />} />;
+                      } else if (submittedAfterQuarterEnd) {
                         return <Chip label="Late" color="warning" size="small" icon={<FaIcons.FaExclamationTriangle />} />;
-                      } else if (row.original.hasSubmittedScorecard) {
+                      } else if (hasSubmittedScorecard) {
                         return <Chip label="Submitted" color="success" size="small" icon={<FaIcons.FaCheckCircle />} />;
                       } else {
                         return <Chip label="Pending" color="error" size="small" icon={<FaIcons.FaClock />} />;
@@ -949,7 +1138,7 @@ const HCDashboard = () => {
                       <Box className="review-item-content">
                         <Avatar 
                           className="review-avatar"
-                          sx={{ bgcolor: scorecard.hcStatus === 'PENDING_HC' ? 'warning.light' : 'success.light' }}
+                          sx={{ bgcolor: scorecard.hcStatus === 'PENDING_HC' ? 'warning.light' : scorecard.hcStatus === 'UNDER_REVIEW_HC' ? 'info.light' : 'success.light' }}
                         >
                           <FaIcons.FaFileAlt />
                         </Avatar>
@@ -963,10 +1152,15 @@ const HCDashboard = () => {
                           <Typography variant="body2" color="textSecondary">
                             Submitted: {scorecard.forwardedToHCAt ? new Date(scorecard.forwardedToHCAt).toLocaleString() : 'N/A'}
                           </Typography>
+                          {scorecard.hcReceivedAt && (
+                            <Typography variant="body2" color="textSecondary">
+                              Received: {new Date(scorecard.hcReceivedAt).toLocaleString()}
+                            </Typography>
+                          )}
                         </Box>
                         <Box className="review-item-status">
                           <Chip 
-                            label={scorecard.hcStatus || 'PENDING_HC'}
+                            label={scorecard.hcStatus === 'PENDING_HC' ? 'Pending' : scorecard.hcStatus === 'UNDER_REVIEW_HC' ? 'Under Review' : scorecard.hcStatus || 'Pending'}
                             color={scorecard.hcStatus === 'PENDING_HC' ? 'warning' : 'success'}
                             size="small"
                           />
@@ -978,6 +1172,25 @@ const HCDashboard = () => {
                           />
                         </Box>
                         <Box className="review-item-actions">
+                          {scorecard.hcStatus === 'PENDING_HC' ? (
+                            <Button
+                              variant="contained"
+                              size="small"
+                              color="success"
+                              startIcon={<AiIcons.AiFillCheckCircle />}
+                              onClick={() => handleMarkAsReceived(scorecard)}
+                              sx={{ mr: 1 }}
+                            >
+                              Mark as Received
+                            </Button>
+                          ) : (
+                            <Chip 
+                              label="Received" 
+                              color="success" 
+                              size="small" 
+                              sx={{ mr: 1 }}
+                            />
+                          )}
                           <Button
                             variant="outlined"
                             size="small"

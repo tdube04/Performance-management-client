@@ -22,6 +22,8 @@ import DialogActions from "@material-ui/core/DialogActions";
 import CommentIcon from "@mui/icons-material/Comment";
 import InfoIcon from "@mui/icons-material/Info";
 import Chip from "@material-ui/core/Chip";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
 
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
@@ -260,24 +262,29 @@ const getCurrentEvaluationPeriod = () => {
 
   let quarter;
   let daysRemaining;
+  let dateRange;
 
   if (currentMonth >= 1 && currentMonth <= 3) {
     quarter = "Q1";
+    dateRange = `01 January - 31 March ${currentYear}`;
     const endOfQuarter = new Date(currentYear, 2, 31);
     const differenceInTime = endOfQuarter.getTime() - currentDate.getTime();
     daysRemaining = Math.ceil(differenceInTime / (1000 * 3600 * 24));
   } else if (currentMonth >= 4 && currentMonth <= 6) {
     quarter = "Q2";
+    dateRange = `01 April - 30 June ${currentYear}`;
     const endOfQuarter = new Date(currentYear, 5, 30);
     const differenceInTime = endOfQuarter.getTime() - currentDate.getTime();
     daysRemaining = Math.ceil(differenceInTime / (1000 * 3600 * 24));
   } else if (currentMonth >= 7 && currentMonth <= 9) {
     quarter = "Q3";
+    dateRange = `01 July - 30 September ${currentYear}`;
     const endOfQuarter = new Date(currentYear, 8, 30);
     const differenceInTime = endOfQuarter.getTime() - currentDate.getTime();
     daysRemaining = Math.ceil(differenceInTime / (1000 * 3600 * 24));
   } else {
     quarter = "Q4";
+    dateRange = `01 October - 31 December ${currentYear}`;
     const endOfQuarter = new Date(currentYear, 11, 31);
     const differenceInTime = endOfQuarter.getTime() - currentDate.getTime();
     daysRemaining = Math.ceil(differenceInTime / (1000 * 3600 * 24));
@@ -285,6 +292,7 @@ const getCurrentEvaluationPeriod = () => {
 
   return {
     evaluationPeriod: `${currentYear}-${quarter}`,
+    dateRange: dateRange,
     daysRemaining: daysRemaining,
   };
 };
@@ -300,7 +308,7 @@ export default function BoardViewWorkplan() {
   const [planStatus, setPlanStatus] = useState("");
   const [clickedComment, setClickedComment] = useState(false);
 
-  const { evaluationPeriod, daysRemaining } = getCurrentEvaluationPeriod();
+  const { evaluationPeriod, dateRange, daysRemaining } = getCurrentEvaluationPeriod();
 
   const tabItem3Styles = useGmailTabItemStyles({
     color: "#188038",
@@ -522,44 +530,110 @@ export default function BoardViewWorkplan() {
             </div>
 
             <br />
-            <div>
-              <Typography
-                style={{
-                  color: "green",
-                }}
-              >
-                {area.section} : Delivery of Mandates / Operations in the
-                Agency Integrated Performance Agreement - Evaluation of Outcomes
-              </Typography>
-              <Typography style={{}}>
-                Current Evaluation Period: {evaluationPeriod}
-              </Typography>
-              <Typography>Name of Appraiser : _____________ </Typography>
 
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "row",
-                }}
-              >
-                <Typography>Designation : _____________ </Typography>
+            {/* Single Elegant Card with All Details */}
+            <Card sx={{ 
+              boxShadow: "0 1px 4px rgba(0,0,0,0.08)", 
+              borderRadius: "8px", 
+              border: "1px solid #f5f5f5",
+              marginBottom: "50px"
+            }}>
+              <CardContent sx={{ padding: "40px" }}>
+                {/* Evaluation Period - Subtle Header */}
+                <Typography style={{ fontSize: "12px", fontWeight: "600", color: "#999", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "4px" }}>
+                  Current Evaluation Period
+                </Typography>
+                <Typography style={{ fontSize: "18px", fontWeight: "500", color: "#309366", marginBottom: "32px" }}>
+                  {dateRange}
+                </Typography>
 
-                <div style={{ marginLeft: "550px" }}>
-                  <Button
-                    variant="contained"
-                    onClick={() =>
-                      navigate("/board-dashboard/workplan-approvals")
-                    }
-                    sx={{
-                      backgroundColor: "#1a237e",
-                      borderRadius: "25px",
-                      textTransform: "none",
-                    }}
-                  >
-                    Back to Workplans
-                  </Button>
+                {/* Divider */}
+                <div style={{ height: "1px", backgroundColor: "#f0f0f0", marginBottom: "32px" }}></div>
+
+                {/* Appraisee and Appraiser in Single Row */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1px 1fr", gap: "40px" }}>
+                  
+                  {/* Appraisee */}
+                  <div>
+                    <Typography style={{ fontSize: "11px", fontWeight: "700", color: "#ccc", textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: "20px" }}>
+                      Appraisee
+                    </Typography>
+                    
+                    <div style={{ marginBottom: "24px" }}>
+                      <Typography style={{ fontSize: "11px", fontWeight: "600", color: "#bbb", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "6px" }}>
+                        Name
+                      </Typography>
+                      <Typography style={{ fontSize: "14px", color: "#1a1a1a", fontWeight: "500" }}>
+                        {workplan.user_email || "_______________"}
+                      </Typography>
+                    </div>
+
+                    <div>
+                      <Typography style={{ fontSize: "11px", fontWeight: "600", color: "#bbb", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "6px" }}>
+                        Date Submitted
+                      </Typography>
+                      <Typography style={{ fontSize: "14px", color: "#1a1a1a", fontWeight: "500" }}>
+                        {workplan.dateSubmitted ? new Date(workplan.dateSubmitted).toLocaleDateString() : "_______________"}
+                      </Typography>
+                    </div>
+                  </div>
+
+                  {/* Vertical Divider */}
+                  <div style={{ backgroundColor: "#f0f0f0", width: "1px", minHeight: "100%" }}></div>
+
+                  {/* Appraiser */}
+                  <div>
+                    <Typography style={{ fontSize: "11px", fontWeight: "700", color: "#ccc", textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: "20px" }}>
+                      Appraiser
+                    </Typography>
+                    
+                    <div style={{ marginBottom: "24px" }}>
+                      <Typography style={{ fontSize: "11px", fontWeight: "600", color: "#bbb", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "6px" }}>
+                        Name
+                      </Typography>
+                      <Typography style={{ fontSize: "14px", color: "#1a1a1a", fontWeight: "500" }}>
+                        {workplan.evaluator_email || "_______________"}
+                      </Typography>
+                    </div>
+
+                    <div>
+                      <Typography style={{ fontSize: "11px", fontWeight: "600", color: "#bbb", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "6px" }}>
+                        Date Approved
+                      </Typography>
+                      <Typography style={{ fontSize: "14px", color: "#1a1a1a", fontWeight: "500" }}>
+                        {workplan.dateApproved ? new Date(workplan.dateApproved).toLocaleDateString() : "_______________"}
+                      </Typography>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              </CardContent>
+            </Card>
+
+            {/* Section Title and Divider */}
+            <div style={{ marginTop: "50px", marginBottom: "30px", paddingBottom: "16px", borderBottom: "1px solid #e0e0e0" }}>
+              <Typography style={{ fontSize: "16px", fontWeight: "600", color: "#1a1a1a" }}>
+                {area.section} : Delivery of Mandates / Operations in the Agency
+              </Typography>
+              <Typography style={{ fontSize: "14px", color: "#666", marginTop: "6px" }}>
+                Integrated Performance Agreement - Evaluation of Outcomes
+              </Typography>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "30px" }}>
+              <Button
+                variant="contained"
+                onClick={() =>
+                  navigate("/board-dashboard/workplan-approvals")
+                }
+                sx={{
+                  backgroundColor: "#1a237e",
+                  borderRadius: "25px",
+                  textTransform: "none",
+                  padding: "8px 30px",
+                }}
+              >
+                Back to Workplans
+              </Button>
             </div>
           </TabPanel>
         ))}

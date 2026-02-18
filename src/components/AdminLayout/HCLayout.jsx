@@ -9,6 +9,7 @@ import * as IoIcons from "react-icons/io";
 import * as RiIcons from "react-icons/ri";
 import * as BsIcons from "react-icons/bs";
 import "./hcLayout.scss";
+import QuarterStatusBadge from "../Quarters/QuarterStatusBadge";
 
 const HCLayout = () => {
   const { userName, setUserName, userType, setUserType, token, setToken } = useStateContext();
@@ -298,6 +299,9 @@ const HCLayout = () => {
 
       {/* Main Content */}
       <main className={`hc-main-content ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+        {/* Quarter Status Banner */}
+        <QuarterStatusBadge />
+        
         <Outlet key={location.pathname} />
       </main>
     </div>

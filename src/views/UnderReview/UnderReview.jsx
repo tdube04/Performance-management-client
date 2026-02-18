@@ -42,7 +42,7 @@ const UnderReview = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosClient.get(`/User/{id}?id=${userName}`);
+        const response = await axiosClient.get(`/User/${userName}`);
         setProfileData(response.data);
         console.log("My Appraiser profile");
         console.log(response.data);
@@ -65,7 +65,7 @@ const UnderReview = () => {
 
       for (let i = 0; i < appraisees.length; i++) {
         const response = await axiosClient.get(
-          `/User/{id}?id=${appraisees[i]}`
+          `/User/${appraisees[i]}`
         );
         console.log("Appraisee profile");
         console.log(response.data);

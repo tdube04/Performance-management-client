@@ -371,7 +371,7 @@ function Row({ program, area, planStatus }) {
                     </TableCell>
 
                     <TableCell align="right" style={{ width: "10%" }}>
-                      Annual Target for 2024(%)
+                      Annual Target for {currentYear}(%)
                     </TableCell>
                     <TableCell align="right" style={{ width: "10%" }}>
                       Allowable Variance
@@ -954,6 +954,8 @@ const getCurrentEvaluationPeriod = () => {
   };
 };
 
+const getCurrentYear = () => new Date().getFullYear();
+
 export default function ViewWorkingScoreCard() {
   const navigate = useNavigate();
   const classes = useStyles();
@@ -970,7 +972,16 @@ export default function ViewWorkingScoreCard() {
   const [selectedTab, setSelectedTab] = useState(0);
   const [workplanStatus, setWorkplanStatus] = useState("");
 
-  const { evaluationPeriod, daysRemaining } = getCurrentEvaluationPeriod();
+  // State for backend quarter status
+  const [currentOpenQuarter, setCurrentOpenQuarter] = useState(null);
+  const [quarterLoading, setQuarterLoading] = useState(true);
+
+  // Get default calendar-based period as fallback
+  const defaultPeriod = getCurrentEvaluationPeriod();
+  const { evaluationPeriod, dateRange, daysRemaining } = defaultPeriod;
+
+  // Get current year for display
+  const currentYear = new Date().getFullYear();
 
   const [responseBody, setResponseBody] = useState([]);
   const { userName, setUserName, userType, setUserType } = useStateContext();
@@ -981,6 +992,29 @@ export default function ViewWorkingScoreCard() {
   const [planStatus, setPlanStatus] = useState("");
 
   const tabItem3Styles = useGmailTabItemStyles({ color: indicatorColors[2] });
+
+  // Fetch current open quarter from backend
+  useEffect(() => {
+    const fetchQuarterStatus = async () => {
+      try {
+        const response = await axiosClient.get("/evaluation_periods/current-status");
+        const quarterData = response.data;
+        
+        if (quarterData.hasOpenQuarter && quarterData.currentQuarter) {
+          setCurrentOpenQuarter(quarterData.currentQuarter);
+          console.log("Current open quarter from backend:", quarterData.currentQuarter);
+        } else {
+          console.log("No open quarter found in backend");
+        }
+        setQuarterLoading(false);
+      } catch (error) {
+        console.error("Error fetching quarter status:", error);
+        setQuarterLoading(false);
+      }
+    };
+
+    fetchQuarterStatus();
+  }, []);
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
@@ -1018,36 +1052,83 @@ export default function ViewWorkingScoreCard() {
       const appraiseeWorkplanArray = [];
       if (profileData) {
         try {
+          // Use backend quarter if available, otherwise fall back to calendar-based period
+          const periodToUse = currentOpenQuarter || evaluationPeriod;
+          
+          // Fetch ALL scorecards without period filter, then filter locally
           const response = await axiosClient.get("/scorecard/searchScorecard", {
             params: {
-              period: evaluationPeriod,
               username: userName,
+              page: 0,
+              size: 100, // Get up to 100 scorecards
             },
           });
-          console.log("Appraisee Scorecard");
+          console.log("All Appraisee Scorecards (unfiltered):");
           console.log(response.data);
-          appraiseeWorkplanArray.push(response.data);
-          setResponseBody(response.data);
+
+          // Get current open quarter from backend if not already set
+          let currentQuarter = currentOpenQuarter;
+          if (!currentQuarter) {
+            try {
+              const quarterResponse = await axiosClient.get("/evaluation_periods/current-status");
+              if (quarterResponse.data.hasOpenQuarter) {
+                currentQuarter = quarterResponse.data.currentQuarter;
+              }
+            } catch (qError) {
+              console.error("Error fetching quarter:", qError);
+            }
+          }
+
+          console.log("Filtering for quarter:", currentQuarter);
+
+          // Filter scorecards to only show those matching the current open quarter
+          let filteredScorecards = response.data;
+          if (response.data && response.data.content) {
+            filteredScorecards = {
+              ...response.data,
+              content: response.data.content.filter(
+                (scorecard) => scorecard.evaluationPeriod === currentQuarter
+              )
+            };
+          } else if (response.data && Array.isArray(response.data)) {
+            // Handle case where response is an array directly
+            filteredScorecards = {
+              content: response.data.filter(
+                (scorecard) => scorecard.evaluationPeriod === currentQuarter
+              )
+            };
+          }
+
+          console.log("Filtered Scorecards (only matching quarter):", filteredScorecards);
+          appraiseeWorkplanArray.push(filteredScorecards);
+          setResponseBody(filteredScorecards);
           console.log(appraiseeWorkplanArray);
 
-          if (
-            response.data.content[0] &&
-            response.data.content[0].areasOfPerformance
-          ) {
-            const areasOfPerformance =
-              response.data.content[0].areasOfPerformance;
+          // Check if filtered scorecards exist
+          const scorecardContent = filteredScorecards?.content || (Array.isArray(filteredScorecards) ? filteredScorecards : []);
+          
+          if (scorecardContent.length > 0 && scorecardContent[0].areasOfPerformance) {
+            const areasOfPerformance = scorecardContent[0].areasOfPerformance;
             console.log("performance Scorecard", areasOfPerformance);
             setPerformanceAreas(areasOfPerformance);
-            setPlanStatus(response.data.content[0].scorecardStatus);
+            setPlanStatus(scorecardContent[0].scorecardStatus);
+          } else {
+            // No scorecard for current quarter - show empty state
+            console.log("No scorecard found for current quarter:", currentQuarter);
+            setPerformanceAreas([]);
+            setPlanStatus("");
           }
         } catch (error) {
           console.error(error);
+          // Show empty state on error
+          setPerformanceAreas([]);
+          setPlanStatus("");
         }
       }
     };
 
     fetchData();
-  }, [profileData]);
+  }, [profileData, currentOpenQuarter, evaluationPeriod, userName]);
 
   const handlePerformanceClick = (area, index) => {
     console.log("Perfomance clicked", area);
@@ -1085,7 +1166,7 @@ export default function ViewWorkingScoreCard() {
 
   //   const workplan = {
   //     appraiser_email: "tdube1",
-  //     areasOfPerformnce: performanceAreas,
+  //     AreasOfPerformance: performanceAreas,
   //     user_email: userName, //muchoko
   //     evaluator_email: "pmuleya",
   //     evaluationPeriod: evaluationPeriod,
@@ -1135,7 +1216,7 @@ export default function ViewWorkingScoreCard() {
             console.log("My ID: " + res.data.content[0].id);
             const myWorkplanId = res.data.content[0].id;
 
-            console.log(res.data.content[0].areasOfPerformnce);
+            console.log(res.data.content[0].AreasOfPerformance);
 
             const updatedWorkplan = {
               ...workplan.content[0],
@@ -1206,7 +1287,9 @@ export default function ViewWorkingScoreCard() {
           <Typography className="" sx={{ fontSize: 12 }}>
             <strong>
               Current Year Of Assessment:{" "}
-              <span style={{ color: "#309366" }}>{evaluationPeriod}</span>
+              <span style={{ color: "#309366" }}>
+                {!quarterLoading && currentOpenQuarter ? currentOpenQuarter : evaluationPeriod}
+              </span>
             </strong>
           </Typography>
         </div>
@@ -1237,7 +1320,29 @@ export default function ViewWorkingScoreCard() {
         </select>{" "}
       </div> */}
       <div className={classes.root}>
-        <Box
+        {/* Show message when no scorecard found for current quarter */}
+        {!quarterLoading && performanceAreas.length === 0 && (
+          <Box sx={{ ml: 4, mt: 2, p: 3, bgcolor: '#fff3e0', borderRadius: 1 }}>
+            <Typography variant="h6" color="error" gutterBottom>
+              No Working Scorecard Found for Current Quarter
+            </Typography>
+            <Typography variant="body1">
+              There is no working scorecard for the current evaluation period. 
+              {currentOpenQuarter ? 
+                `The current open quarter is ${currentOpenQuarter}.` : 
+                "No quarter is currently open in the system."}
+            </Typography>
+            {!currentOpenQuarter && (
+              <Typography variant="body2" sx={{ mt: 1 }}>
+                Please contact the administrator to open a new quarter.
+              </Typography>
+            )}
+          </Box>
+        )}
+
+        {performanceAreas.length > 0 && (
+          <>
+            <Box
           sx={{
             mt: 1,
             ml: 4,
@@ -1366,7 +1471,7 @@ export default function ViewWorkingScoreCard() {
                 Integrated Performance Agreement - Evaluation of Outcomes
               </Typography>
               <Typography style={{}}>
-                Current Evaluation Period : 01 July - 30 September 2024
+                Current Evaluation Period : 01 July - 30 September {currentYear}
               </Typography>
               <Typography>Name of Appraiser : _____________ </Typography>
 
@@ -1402,6 +1507,8 @@ export default function ViewWorkingScoreCard() {
             </div>
           </TabPanel>
         ))}
+          </>
+        )}
       </div>
     </>
   );

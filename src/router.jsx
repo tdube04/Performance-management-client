@@ -54,6 +54,8 @@ import UpdateProfile from "./components/UserProfile/UpdateProfile";
 import AddQuarter from "./components/Quarters/AddQuarters";
 import CloseQuarter from "./components/Quarters/CloseQuarter";
 import OpenQuarter from "./components/Quarters/OpenQuarter";
+import ArchiveTemplates from "./components/WorkplanTemplates/ArchiveTemplates";
+import ViewArchivedTemplate from "./components/WorkplanTemplates/ViewArchivedTemplate";
 import ViewRepositoryWorkPlans from "./views/ViewRepositoryWorkplans/ViewRepositoryWorkplans";
 import ElevateUserRole from "./components/ElevateUserRole/ElevateUserRole";
 import UpdateWorkplan2 from "./views/CreateWorkPlan/UpdateWorkplan2";
@@ -423,6 +425,11 @@ const router = createBrowserRouter([
       },
     ],
   },
+  // Standalone route for HC to view user scorecards (outside HCLayout to avoid nested route issues)
+  {
+    path: "/hc/user/:username/scorecard",
+    element: <ResultScoreCard />,
+  },
   {
     path: "/",
     element: <GuestLayout />,
@@ -513,6 +520,14 @@ const router = createBrowserRouter([
       {
         path: "/admin/open-quarter-evaluation-period",
         element: <OpenQuarter />,
+      },
+      {
+        path: "/admin/workplan-template-archive",
+        element: <ArchiveTemplates />,
+      },
+      {
+        path: "/admin/workplan-template-view/:id",
+        element: <ViewArchivedTemplate />,
       },
       {
         path: "/admin/update-user-role",

@@ -214,7 +214,7 @@ export default function AddPerformanceArea() {
     Object.assign(updatedPerformanceArea, newPerformance);
 
     axiosClient
-      .post("Performance_Area/save/", updatedPerformanceArea)
+      .post("Performance_Area/save", updatedPerformanceArea)
       .then((response) => {
         console.log(response.data);
 

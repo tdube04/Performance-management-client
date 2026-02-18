@@ -1,63 +1,60 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 import "./quarters.scss";
 
 import swal from "sweetalert";
-import Popover from "@mui/material/Popover";
+import MenuItem from "@mui/material/MenuItem";
+import Select from "@mui/material/Select";
+import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
 import axiosClient from "../../authentication/axios-client";
 import { useNavigate } from "react-router-dom";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 
 export default function CloseQuarter() {
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
-  const quaterNameRef = useRef(null);
-  const allowableDaysRef = useRef(null);
-
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
   const periodRef = useRef(null);
-  const yearRef = useRef(null);
 
   const [message, setMessage] = useState(null);
-  const [selectedIncrementDecrement, setSelectedIncrementDecrement] = useState(
-    ""
-  );
+  const [selectedPeriod, setSelectedPeriod] = useState("");
+  const [evaluationPeriods, setEvaluationPeriods] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const [errors, setErrors] = useState([]);
+  // Fetch all evaluation periods on component mount
+  useEffect(() => {
+    fetchEvaluationPeriods();
+  }, []);
 
-  const handleIncrementChange = (event) => {
-    if (event && event.target) {
-      setSelectedIncrementDecrement(event.target.value);
+  const fetchEvaluationPeriods = async () => {
+    try {
+      const response = await axiosClient.get("/evaluation_periods/all");
+      // Filter to only show Open periods that can be closed
+      const openPeriods = response.data.filter(
+        (period) => period.periodStatus.toLowerCase() === "open"
+      );
+      setEvaluationPeriods(openPeriods);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching evaluation periods:", error);
+      setLoading(false);
     }
+  };
+
+  const handlePeriodChange = (event) => {
+    setSelectedPeriod(event.target.value);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Perform form validation before submitting
-
-    const period = periodRef.current.value;
-    // const year = yearRef.current.value;
-    console.log(period);
-
-    let errors = [];
-
-    if (!period) {
-      setMessage("Please enter a period");
-      return;
-    }
-
-    if (errors.length > 0) {
-      setErrors(errors);
+    if (!selectedPeriod) {
+      setMessage("Please select an evaluation period");
       return;
     }
 
     axiosClient
-      .put(`/evaluation_periods/close?id=${period}`)
+      .put(`/evaluation_periods/close?id=${selectedPeriod}`)
       .then((res) => {
         if (res.data === "cant find the period") {
           swal({
@@ -65,20 +62,41 @@ export default function CloseQuarter() {
             icon: "warning",
             button: "OK",
           });
+        } else if (res.data.includes("WARNING")) {
+          // Early closure with warning - still proceed but warn user
+          swal({
+            text: res.data,
+            icon: "warning",
+            button: "OK",
+          }).then(() => {
+            fetchEvaluationPeriods();
+            setSelectedPeriod("");
+          });
+        } else if (res.data.includes("You can only close")) {
+          swal({
+            text: res.data,
+            icon: "warning",
+            button: "OK",
+          });
         } else {
           swal({
-            text: "Evaluation Period Successfully Closed",
+            text: "Evaluation Period Successfully Closed. The workplan template has been archived.",
             icon: "success",
             button: "OK",
           }).then(() => {
-            console.log(res.data);
-            // navigate("/admin/dashboard");
+            // Refresh the list after closing
+            fetchEvaluationPeriods();
+            setSelectedPeriod("");
           });
         }
-        periodRef.current.value = "";
       })
       .catch((err) => {
         console.log(err);
+        swal({
+          text: "Error closing evaluation period",
+          icon: "error",
+          button: "OK",
+        });
       });
   };
 
@@ -99,7 +117,6 @@ export default function CloseQuarter() {
           borderRadius: "6px",
         }}
       >
-        {" "}
         <Typography variant="body2" sx={{ textAlign: "center", ml: 5 }}>
           CLOSE THE EVALUATION PERIOD
         </Typography>
@@ -118,86 +135,42 @@ export default function CloseQuarter() {
         }}
       >
         <h6>Close Evaluation Period</h6>
-        <br />
+        <p style={{ fontSize: "12px", color: "#666", marginBottom: "15px" }}>
+          When you close a quarter, the current workplan template (including all 
+          performance areas, programs, and weights) will be automatically archived 
+          for historical reference and auditing purposes.
+        </p>
         <form onSubmit={handleSubmit}>
-          {/* <div style={{ display: "flex", gap: "10px" }}> */}
-          {/* <div>
-              <label>From</label>
-              <br />
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <DatePicker
-                  className="custom-date-picker"
-                  value={startDate}
-                  onChange={(newDate) => setStartDate(newDate)}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      placeholder="Start Date"
-                      InputProps={{
-                        ...params.InputProps,
-                        style: {
-                          background: "#f9f6f6",
-                          borderRadius: "8px",
-                          padding: "0.5rem",
-                          border: "1px solid #ccc",
-                        },
-                      }}
-                    />
-                  )}
-                />
-              </LocalizationProvider>
-            </div>
-            <p style={{ marginTop: "25px" }}>-</p>
-            <div>
-              <label style={{ width: "170px" }}>To</label>
-              <br />
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <DatePicker
-                  className="custom-date-picker"
-                  value={endDate}
-                  onChange={(newDate) => setEndDate(newDate)}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      placeholder="End Date"
-                      InputProps={{
-                        ...params.InputProps,
-                        style: {
-                          background: "#f9f6f6",
-                          borderRadius: "8px",
-                          padding: "0.5rem",
-                          border: "1px solid #ccc",
-                        },
-                      }}
-                    />
-                  )}
-                />
-              </LocalizationProvider>
-            </div>
-          </div> */}
+          <FormControl fullWidth style={{ marginBottom: "15px" }}>
+            <InputLabel id="period-select-label">Select Evaluation Period</InputLabel>
+            <Select
+              labelId="period-select-label"
+              id="period-select"
+              value={selectedPeriod}
+              label="Select Evaluation Period"
+              onChange={handlePeriodChange}
+              onClick={handleInputClick}
+              ref={periodRef}
+            >
+              {loading ? (
+                <MenuItem value="">
+                  <em>Loading...</em>
+                </MenuItem>
+              ) : evaluationPeriods.length === 0 ? (
+                <MenuItem value="">
+                  <em>No open evaluation periods available</em>
+                </MenuItem>
+              ) : (
+                evaluationPeriods.map((period) => (
+                  <MenuItem key={period.period} value={period.period}>
+                    {period.period} - {period.periodStatus} 
+                    ({new Date(period.startDate).toLocaleDateString()} - {new Date(period.endDate).toLocaleDateString()})
+                  </MenuItem>
+                ))
+              )}
+            </Select>
+          </FormControl>
 
-          <label style={{ width: "170px" }}>Period</label>
-          <br />
-          <input
-            type="text"
-            placeholder="e.g 2023-Q1 "
-            className="input-pillar"
-            ref={periodRef}
-            style={{ width: "100%" }}
-            onClick={handleInputClick}
-          />
-
-          {/* <br />
-          <label style={{ width: "170px" }}>Year</label>
-          <br />
-          <input
-            type="text"
-            placeholder="e.g 2023 "
-            className="input-pillar"
-            ref={yearRef}
-            style={{ width: "100%" }}
-            onClick={handleInputClick}
-          /> */}
           <div
             className="btn-addPillar"
             style={{
@@ -206,12 +179,16 @@ export default function CloseQuarter() {
               marginRight: "100px",
             }}
           >
-            <button className="pillar-btn" style={{ borderRadius: "25px" }}>
-              Submit
+            <button 
+              className="pillar-btn" 
+              style={{ borderRadius: "25px" }}
+              disabled={!selectedPeriod || loading}
+            >
+              Close & Archive Template
             </button>
           </div>
           {message && (
-            <div className="alert alert-danger">
+            <div className="alert alert-danger" style={{ marginTop: "10px" }}>
               <p>{message}</p>
             </div>
           )}

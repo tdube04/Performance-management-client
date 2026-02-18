@@ -20,6 +20,8 @@ import { useStateContext } from "../../context/ContextProvider";
 import ArticleIcon from "@mui/icons-material/Article";
 import Button from "@mui/material/Button";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import IconButton from "@mui/material/IconButton";
+import CloseIcon from "@mui/icons-material/Close";
 import { useNavigate } from "react-router-dom";
 
 const getCurrentEvaluationPeriod = () => {
@@ -93,6 +95,11 @@ export default function SummaryScores() {
   const navigate = useNavigate();
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
   const [hasConfirmed, setHasConfirmed] = useState(false);
+  const [hasData, setHasData] = useState(true);
+  const [currentOpenQuarter, setCurrentOpenQuarter] = useState(null);
+  const [periodMismatch, setPeriodMismatch] = useState(false);
+  const [confirmedQuarter, setConfirmedQuarter] = useState(null);
+  const [dismissedConfirmation, setDismissedConfirmation] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -109,6 +116,27 @@ export default function SummaryScores() {
 
     fetchData();
   }, [userName, profileData]);
+
+  // Fetch current open quarter from backend
+  useEffect(() => {
+    const fetchQuarterStatus = async () => {
+      try {
+        const response = await axiosClient.get("/evaluation_periods/current-status");
+        const quarterData = response.data;
+        
+        if (quarterData.hasOpenQuarter && quarterData.currentQuarter) {
+          setCurrentOpenQuarter(quarterData.currentQuarter);
+          console.log("Current open quarter from backend:", quarterData.currentQuarter);
+        } else {
+          console.log("No open quarter found in backend");
+        }
+      } catch (error) {
+        console.error("Error fetching quarter status:", error);
+      }
+    };
+
+    fetchQuarterStatus();
+  }, []);
 
   useEffect(() => {
     console.log(profileData);
@@ -132,14 +160,25 @@ export default function SummaryScores() {
     totalWeightedScore += weightedScore;
   });
 
+  // Reset dismissed confirmation when quarter changes or when viewing a different quarter's scorecard
+  useEffect(() => {
+    if (confirmedQuarter && currentOpenQuarter && confirmedQuarter !== currentOpenQuarter) {
+      // User is viewing a scorecard from a previous quarter - reset dismissed state
+      setDismissedConfirmation(false);
+    }
+  }, [currentOpenQuarter, confirmedQuarter]);
+
   useEffect(() => {
     const fetchData = async () => {
       const appraiseeWorkplanArray = [];
       if (profileData) {
         try {
+          // Use backend quarter if available, otherwise fall back to calendar-based period
+          const periodToUse = currentOpenQuarter || evaluationPeriod;
+          
           const response = await axiosClient.get("/scorecard/searchScorecard", {
             params: {
-              period: evaluationPeriod,
+              period: periodToUse,
               username: userName,
             },
           });
@@ -147,10 +186,24 @@ export default function SummaryScores() {
           console.log(response.data);
 
           setResponseBody(response.data);
+          
+          // Check if there's data for the current period
           if (
+            response.data.content &&
+            response.data.content.length > 0 &&
             response.data.content[0] &&
             response.data.content[0].areasOfPerformance
           ) {
+            const scorecardPeriod = response.data.content[0].evaluationPeriod;
+            
+            // Check if the scorecard period matches the current open quarter
+            if (currentOpenQuarter && scorecardPeriod !== currentOpenQuarter) {
+              setPeriodMismatch(true);
+              console.log("Period mismatch: scorecard period is", scorecardPeriod, "but current open quarter is", currentOpenQuarter);
+            } else {
+              setPeriodMismatch(false);
+            }
+            
             const areasOfPerformance =
               response.data.content[0].areasOfPerformance;
             console.log("performance Scorecard", areasOfPerformance);
@@ -160,24 +213,34 @@ export default function SummaryScores() {
             setTotalOveralWeightedScore(
               response.data.content[0].total_overal_weighted_score
             );
+            setHasData(true);
             
             // Check if scorecard needs confirmation
             const status = response.data.content[0].scorecardStatus;
             const alreadyConfirmed = response.data.content[0].appraiseeConfirmed;
+            
+            // Track the quarter for which the scorecard was confirmed
+            if (alreadyConfirmed) {
+              setConfirmedQuarter(scorecardPeriod);
+            }
+            
             if ((status === "Approved" || status === "EvaluatorApproved") && !alreadyConfirmed) {
               setNeedsConfirmation(true);
             } else if (alreadyConfirmed) {
               setHasConfirmed(true);
             }
+          } else {
+            setHasData(false);
           }
         } catch (error) {
           console.error(error);
+          setHasData(false);
         }
       }
     };
 
     fetchData();
-  }, [profileData]);
+  }, [profileData, currentOpenQuarter]);
 
   return (
     <React.Fragment>
@@ -226,8 +289,8 @@ export default function SummaryScores() {
           </div>
         )}
 
-        {/* Already Confirmed Banner */}
-        {hasConfirmed && (
+        {/* Already Confirmed Banner - Only show when scorecard matches current open quarter and not dismissed */}
+        {hasConfirmed && !periodMismatch && currentOpenQuarter && confirmedQuarter === currentOpenQuarter && !dismissedConfirmation && (
           <div style={{
             background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
             borderRadius: "12px",
@@ -235,18 +298,56 @@ export default function SummaryScores() {
             marginBottom: "24px",
             display: "flex",
             alignItems: "center",
+            justifyContent: "space-between",
             gap: "16px",
             boxShadow: "0 4px 15px rgba(16, 185, 129, 0.4)"
           }}>
-            <CheckCircleIcon sx={{ fontSize: 32, color: "#fff" }} />
-            <div>
-              <Typography variant="h6" sx={{ color: "#fff", fontWeight: "bold" }}>
-                Scorecard Confirmed
-              </Typography>
-              <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.9)" }}>
-                Your result scorecard has been confirmed and forwarded to Human Capital for processing.
-              </Typography>
+            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+              <CheckCircleIcon sx={{ fontSize: 32, color: "#fff" }} />
+              <div>
+                <Typography variant="h6" sx={{ color: "#fff", fontWeight: "bold" }}>
+                  Scorecard Confirmed
+                </Typography>
+                <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.9)" }}>
+                  Your result scorecard has been confirmed and forwarded to Human Capital for processing.
+                </Typography>
+              </div>
             </div>
+            <IconButton
+              onClick={() => setDismissedConfirmation(true)}
+              sx={{
+                color: "#fff",
+                backgroundColor: "rgba(255,255,255,0.2)",
+                "&:hover": {
+                  backgroundColor: "rgba(255,255,255,0.3)"
+                }
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </div>
+        )}
+
+        {/* No Data or Period Mismatch Message */}
+        {(hasData || periodMismatch) && (
+          <div style={{
+            backgroundColor: periodMismatch ? '#fff3e0' : (hasData ? 'transparent' : '#fff3e0'),
+            border: periodMismatch ? '1px solid #ff9800' : '1px solid #ff9800',
+            borderRadius: '8px',
+            padding: '20px',
+            margin: '20px 0',
+            textAlign: 'center',
+            display: hasData ? 'none' : 'block'
+          }}>
+            <Typography variant="h6" color="warning" gutterBottom>
+              No data available for this period
+            </Typography>
+            <Typography variant="body2" color="textSecondary">
+              {periodMismatch 
+                ? `There is no result scorecard data available for the current open quarter (${currentOpenQuarter}). The table below shows empty values.`
+                : `There is no result scorecard data available for the evaluation period: ${evaluationPeriod}.`}
+              Please ensure that the scorecard has been submitted and approved for this period.
+            </Typography>
           </div>
         )}
 
@@ -287,7 +388,9 @@ export default function SummaryScores() {
               <Typography className="" sx={{ fontSize: 12 }}>
                 <strong>
                   Current Year Of Assessment:{" "}
-                  <span style={{ color: "#309366" }}>{evaluationPeriod}</span>
+                  <span style={{ color: "#309366" }}>
+                    {currentOpenQuarter || evaluationPeriod}
+                  </span>
                 </strong>
               </Typography>
             </div>
@@ -384,20 +487,29 @@ export default function SummaryScores() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {performanceAreas.map((area) => {
-                  if (area.performanceArea) {
-                    return (
-                      <TableRow key={area.id}>
-                        <TableCell>{area.section}</TableCell>
-                        <TableCell>{area.performanceArea}</TableCell>
-                        <TableCell>{area.weight}</TableCell>
-                        <TableCell>{area.performance_area_score}</TableCell>
-                      </TableRow>
-                    );
-                  } else {
-                    return null;
-                  }
-                })}
+                {(hasData && !periodMismatch) ? (
+                  performanceAreas.map((area) => {
+                    if (area.performanceArea) {
+                      return (
+                        <TableRow key={area.id}>
+                          <TableCell>{area.section}</TableCell>
+                          <TableCell>{area.performanceArea}</TableCell>
+                          <TableCell>{area.weight}</TableCell>
+                          <TableCell>{area.performance_area_score}</TableCell>
+                        </TableRow>
+                      );
+                    } else {
+                      return null;
+                    }
+                  })
+                ) : (
+                  // Show empty rows when no data or period mismatch
+                  <TableRow>
+                    <TableCell colSpan={4} style={{ textAlign: "center", color: "#999" }}>
+                      No data available for this period
+                    </TableCell>
+                  </TableRow>
+                )}
                 <TableRow>
                   <TableCell colSpan={3} style={{ fontWeight: "bold" }}>
                     Total Weighted Score
@@ -407,22 +519,24 @@ export default function SummaryScores() {
                       style={{
                         fontWeight: "bold",
                         color:
-                          totalOveralWeightedScore >= 1 &&
-                          totalOveralWeightedScore <= 2
-                            ? "red"
-                            : totalOveralWeightedScore >= 3 &&
-                              totalOveralWeightedScore <= 3.9
-                            ? "orange"
-                            : totalOveralWeightedScore >= 4 &&
-                              totalOveralWeightedScore <= 4.9
-                            ? "green"
-                            : totalOveralWeightedScore >= 5 &&
-                              totalOveralWeightedScore <= 6
-                            ? "blue"
-                            : "inherit",
+                          (hasData && !periodMismatch) ? (
+                            totalOveralWeightedScore >= 1 &&
+                            totalOveralWeightedScore <= 2
+                              ? "red"
+                              : totalOveralWeightedScore >= 3 &&
+                                totalOveralWeightedScore <= 3.9
+                              ? "orange"
+                              : totalOveralWeightedScore >= 4 &&
+                                totalOveralWeightedScore <= 4.9
+                              ? "green"
+                              : totalOveralWeightedScore >= 5 &&
+                                totalOveralWeightedScore <= 6
+                              ? "blue"
+                              : "inherit"
+                          ) : "inherit",
                       }}
                     >
-                      {totalOveralWeightedScore}
+                      {(hasData && !periodMismatch) ? totalOveralWeightedScore : "0"}
                     </Typography>
                   </TableCell>
                 </TableRow>
@@ -550,12 +664,16 @@ export default function SummaryScores() {
               <b>Signature:</b> T. Dube
             </Typography> */}
             <Typography>
-              <b>Date Submitted:</b>__________
+              <b>Date Submitted:</b> {responseBody && responseBody.content && responseBody.content[0] && responseBody.content[0].dateSubmitted 
+                ? new Date(responseBody.content[0].dateSubmitted).toLocaleString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+                : "__________"}
             </Typography>
           </div>
           <div>
             <Typography>
-              <b>Name of Appraiser :</b> __________
+              <b>Name of Appraiser :</b> {responseBody && responseBody.content && responseBody.content[0] && responseBody.content[0].evaluator_email 
+                ? responseBody.content[0].evaluator_email 
+                : "__________"}
             </Typography>
 
             {/* <Typography>
@@ -563,7 +681,9 @@ export default function SummaryScores() {
             </Typography> */}
 
             <Typography>
-              <b>Date Approved:</b>__________
+              <b>Date Approved:</b> {responseBody && responseBody.content && responseBody.content[0] && responseBody.content[0].dateApproved 
+                ? new Date(responseBody.content[0].dateApproved).toLocaleString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+                : "__________"}
             </Typography>
           </div>
         </div>

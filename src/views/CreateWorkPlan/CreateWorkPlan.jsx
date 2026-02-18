@@ -217,7 +217,8 @@ const CreateWorkPlan = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosClient.get(`/User/{id}?id=${userName}`);
+        const response = await axiosClient.get(`/User/${userName}`);
+        console.log(response);
         setProfileData(response.data);
         setResources(response.data.appraisees);
         console.log("My Appraiser resource", resources);
@@ -797,18 +798,7 @@ const CreateWorkPlan = () => {
                     console.log("Responsible Division:", postedData.division);
                   }
                   setIsFormSubmitted(true);
-                  indicatorRef.current.value = "";
-
-                  weightRef.current.value = "";
-                  // selectedPerfomance = "";
-                  setSelectedPerfomance("");
-                  setSelectedProgram("");
-                  setSelectedMeasurement("");
-                  setSelectedDivision("");
-                  // prevPerformanceRef.current.value("");
-                  annualTargetRef.current.value = "";
-                  varianceRef.current.value = "";
-                  targetRef.current.value = "";
+                  resetForm();
                 }
               })
               .catch((err) => {
@@ -873,8 +863,7 @@ const CreateWorkPlan = () => {
                 responsibleResources: selectedResources,
               });
               setIsFormSubmitted(true);
-              indicatorRef.current.value = "";
-              weightRef.current.value = "";
+              resetForm();
             })
             .catch((err) => {
               console.log(err);
@@ -912,6 +901,35 @@ const CreateWorkPlan = () => {
   };
   const handleInputClick = () => {
     setMessage("");
+  };
+
+  // Comprehensive form reset function
+  const resetForm = () => {
+    // Reset all state variables
+    setSelectedPerfomance("");
+    setSelectedProgram("");
+    setSelectedIndicator("");
+    setSelectedMeasurement("");
+    setSelectedDivision("");
+    setSelectedSection("");
+    setSelectedResources([]);
+    setSelectedIncrementDecrement("");
+    setSelectedPerfomanceArea(null);
+    setOtherMeasurement("");
+    setIsFormSubmitted(false);
+    setMessage(null);
+    
+    // Reset all refs
+    if (indicatorRef.current) indicatorRef.current.value = "";
+    if (weightRef.current) weightRef.current.value = "";
+    if (annualTargetRef.current) annualTargetRef.current.value = "";
+    if (measurementUnitRef.current) measurementUnitRef.current.value = "";
+    if (varianceRef.current) varianceRef.current.value = "";
+    if (targetRef.current) targetRef.current.value = "";
+    if (prevPerformanceRef.current) prevPerformanceRef.current.value = "";
+    if (performanceRef.current) performanceRef.current.value = "";
+    if (percentRef.current) percentRef.current.value = "";
+    if (outcomeRef.current) outcomeRef.current.value = "";
   };
 
   return (

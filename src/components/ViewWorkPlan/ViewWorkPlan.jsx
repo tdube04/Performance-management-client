@@ -67,6 +67,57 @@ import DialogActions from "@material-ui/core/DialogActions";
 import DialogContent from "@material-ui/core/DialogContent";
 import DialogTitle from "@material-ui/core/DialogTitle";
 
+const getCurrentEvaluationPeriod = () => {
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth() + 1; // January is 0, so we add 1
+
+  let quarter;
+  let daysRemaining;
+  let dateRange;
+
+  if (currentMonth >= 1 && currentMonth <= 3) {
+    quarter = "Q1";
+    dateRange = `01 January - 31 March ${currentYear}`;
+    const endOfQuarter = new Date(currentYear, 2, 31); // March 31st
+    const differenceInTime = endOfQuarter.getTime() - currentDate.getTime();
+    daysRemaining = Math.ceil(differenceInTime / (1000 * 3600 * 24));
+  } else if (currentMonth >= 4 && currentMonth <= 6) {
+    quarter = "Q2";
+    dateRange = `01 April - 30 June ${currentYear}`;
+    const endOfQuarter = new Date(currentYear, 5, 30); // June 30th
+    const differenceInTime = endOfQuarter.getTime() - currentDate.getTime();
+    daysRemaining = Math.ceil(differenceInTime / (1000 * 3600 * 24));
+  } else if (currentMonth >= 7 && currentMonth <= 9) {
+    quarter = "Q3";
+    dateRange = `01 July - 30 September ${currentYear}`;
+    const endOfQuarter = new Date(currentYear, 8, 30); // September 30th
+    const differenceInTime = endOfQuarter.getTime() - currentDate.getTime();
+    daysRemaining = Math.ceil(differenceInTime / (1000 * 3600 * 24));
+  } else {
+    quarter = "Q4";
+    dateRange = `01 October - 31 December ${currentYear}`;
+    const endOfQuarter = new Date(currentYear, 11, 31); // December 31st
+    const differenceInTime = endOfQuarter.getTime() - currentDate.getTime();
+    daysRemaining = Math.ceil(differenceInTime / (1000 * 3600 * 24));
+  }
+
+  return {
+    evaluationPeriod: `${currentYear}-${quarter}`,
+    dateRange: dateRange,
+    daysRemaining: daysRemaining,
+  };
+};
+
+const useStyles = makeStyles((theme) => ({
+  root: {
+    flexGrow: 1,
+    backgroundColor: theme.palette.background.paper,
+  },
+}));
+
+const getCurrentYear = () => new Date().getFullYear();
+
 function Row({
   program,
   area,
@@ -235,7 +286,7 @@ function Row({
                     </TableCell>
 
                     <TableCell align="right" style={{ width: "10%" }}>
-                      Annual Target for 2024(%)
+                      Annual Target for {currentYear}(%)
                     </TableCell>
                     <TableCell align="right" style={{ width: "10%" }}>
                       Allowable Variance
@@ -423,54 +474,12 @@ const TabPanel = ({ children, value, index, ...other }) => {
     </div>
   );
 };
-const useStyles = makeStyles((theme) => ({
-  root: {
-    flexGrow: 1,
-    backgroundColor: theme.palette.background.paper,
-  },
-}));
 
 const label = { inputProps: { "aria-label": "Checkbox demo" } };
 TabPanel.propTypes = {
   children: PropTypes.node,
   index: PropTypes.any.isRequired,
   value: PropTypes.any.isRequired,
-};
-
-const getCurrentEvaluationPeriod = () => {
-  const currentDate = new Date();
-  const currentYear = currentDate.getFullYear();
-  const currentMonth = currentDate.getMonth() + 1; // January is 0, so we add 1
-
-  let quarter;
-  let daysRemaining;
-
-  if (currentMonth >= 1 && currentMonth <= 3) {
-    quarter = "Q1";
-    const endOfQuarter = new Date(currentYear, 2, 31); // March 31st
-    const differenceInTime = endOfQuarter.getTime() - currentDate.getTime();
-    daysRemaining = Math.ceil(differenceInTime / (1000 * 3600 * 24));
-  } else if (currentMonth >= 4 && currentMonth <= 6) {
-    quarter = "Q2";
-    const endOfQuarter = new Date(currentYear, 5, 30); // June 30th
-    const differenceInTime = endOfQuarter.getTime() - currentDate.getTime();
-    daysRemaining = Math.ceil(differenceInTime / (1000 * 3600 * 24));
-  } else if (currentMonth >= 7 && currentMonth <= 9) {
-    quarter = "Q3";
-    const endOfQuarter = new Date(currentYear, 8, 30); // September 30th
-    const differenceInTime = endOfQuarter.getTime() - currentDate.getTime();
-    daysRemaining = Math.ceil(differenceInTime / (1000 * 3600 * 24));
-  } else {
-    quarter = "Q4";
-    const endOfQuarter = new Date(currentYear, 11, 31); // December 31st
-    const differenceInTime = endOfQuarter.getTime() - currentDate.getTime();
-    daysRemaining = Math.ceil(differenceInTime / (1000 * 3600 * 24));
-  }
-
-  return {
-    evaluationPeriod: `${currentYear}-${quarter}`,
-    daysRemaining: daysRemaining,
-  };
 };
 
 export default function ViewWorkPlan() {
@@ -491,7 +500,13 @@ export default function ViewWorkPlan() {
   const [selectedTab, setSelectedTab] = useState(0);
   const [workplanStatus, setWorkplanStatus] = useState("");
 
-  const { evaluationPeriod, daysRemaining } = getCurrentEvaluationPeriod();
+  // State for backend quarter status
+  const [currentOpenQuarter, setCurrentOpenQuarter] = useState(null);
+  const [quarterLoading, setQuarterLoading] = useState(true);
+
+  // Get default calendar-based period as fallback
+  const defaultPeriod = getCurrentEvaluationPeriod();
+  const { evaluationPeriod, dateRange, daysRemaining } = defaultPeriod;
 
   const [responseBody, setResponseBody] = useState([]);
   const { userName, setUserName, userType, setUserType } = useStateContext();
@@ -505,8 +520,32 @@ export default function ViewWorkPlan() {
 
   const [workplanComment, setWorkplanComment] = useState("");
   const [clickedComment, setClickedComment] = useState(false);
+  const [workplanData, setWorkplanData] = useState({});
 
   const tabItem3Styles = useGmailTabItemStyles({ color: indicatorColors[2] });
+
+  // Fetch current open quarter from backend
+  useEffect(() => {
+    const fetchQuarterStatus = async () => {
+      try {
+        const response = await axiosClient.get("/evaluation_periods/current-status");
+        const quarterData = response.data;
+        
+        if (quarterData.hasOpenQuarter && quarterData.currentQuarter) {
+          setCurrentOpenQuarter(quarterData.currentQuarter);
+          console.log("Current open quarter from backend:", quarterData.currentQuarter);
+        } else {
+          console.log("No open quarter found in backend");
+        }
+        setQuarterLoading(false);
+      } catch (error) {
+        console.error("Error fetching quarter status:", error);
+        setQuarterLoading(false);
+      }
+    };
+
+    fetchQuarterStatus();
+  }, []);
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
@@ -539,43 +578,92 @@ export default function ViewWorkPlan() {
     fetchData();
   }, [userName]);
 
+  // Fetch workplan data - runs when profileData or currentOpenQuarter changes
   useEffect(() => {
     const fetchData = async () => {
       const appraiseeWorkplanArray = [];
       if (profileData) {
         try {
+          // Fetch ALL workplans without period filter, then filter locally
           const response = await axiosClient.get("/workplan/searchWorkplan", {
             params: {
-              period: evaluationPeriod,
               username: userName,
+              page: 0,
+              size: 100, // Get up to 100 workplans
             },
           });
-          console.log("Appraisee Workplan");
+          console.log("All Appraisee Workplans (unfiltered):");
           console.log(response.data);
-          appraiseeWorkplanArray.push(response.data);
-          setResponseBody(response.data);
+
+          // Get current open quarter from backend
+          let currentQuarter = currentOpenQuarter;
+          if (!currentQuarter) {
+            try {
+              const quarterResponse = await axiosClient.get("/evaluation_periods/current-status");
+              if (quarterResponse.data.hasOpenQuarter) {
+                currentQuarter = quarterResponse.data.currentQuarter;
+              }
+            } catch (qError) {
+              console.error("Error fetching quarter:", qError);
+            }
+          }
+
+          console.log("Filtering for quarter:", currentQuarter);
+
+          // Filter workplans to only show those matching the current open quarter
+          let filteredWorkplans = response.data;
+          if (response.data && response.data.content) {
+            filteredWorkplans = {
+              ...response.data,
+              content: response.data.content.filter(
+                (workplan) => workplan.evaluationPeriod === currentQuarter
+              )
+            };
+          } else if (response.data && Array.isArray(response.data)) {
+            // Handle case where response is an array directly
+            filteredWorkplans = {
+              content: response.data.filter(
+                (workplan) => workplan.evaluationPeriod === currentQuarter
+              )
+            };
+          }
+
+          console.log("Filtered Workplans (only matching quarter):", filteredWorkplans);
+          appraiseeWorkplanArray.push(filteredWorkplans);
+          setResponseBody(filteredWorkplans);
           console.log(appraiseeWorkplanArray);
 
-          if (
-            response.data.content[0] &&
-            response.data.content[0].areasOfPerformance
-          ) {
-            const areasOfPerformance =
-              response.data.content[0].areasOfPerformance;
+          // Check if filtered workplans exist
+          const workplanContent = filteredWorkplans?.content || (Array.isArray(filteredWorkplans) ? filteredWorkplans : []);
+          
+          if (workplanContent.length > 0 && workplanContent[0].areasOfPerformance) {
+            const areasOfPerformance = workplanContent[0].areasOfPerformance || workplanContent[0].AreasOfPerformance;
             console.log("performance Workplan", areasOfPerformance);
             setPerformanceAreas(areasOfPerformance);
-            setPlanStatus(response.data.content[0].workplanStatus);
-            setWorkplanId(response.data.content[0].id);
-            setWorkplanComment(response.data.content[0].statusComments);
+            setPlanStatus(workplanContent[0].workplanStatus);
+            setWorkplanId(workplanContent[0].id);
+            setWorkplanComment(workplanContent[0].statusComments);
+            setWorkplanData(workplanContent[0]);
+          } else {
+            // No workplan for current quarter - show empty state
+            console.log("No workplan found for current quarter:", currentQuarter);
+            setPerformanceAreas([]);
+            setPlanStatus("");
+            setWorkplanId(null);
+            setWorkplanComment("");
+            setWorkplanData({});
           }
         } catch (error) {
           console.error(error);
+          // Show empty state on error
+          setPerformanceAreas([]);
+          setPlanStatus("");
         }
       }
     };
 
     fetchData();
-  }, [profileData]);
+  }, [profileData, currentOpenQuarter, evaluationPeriod, userName]);
 
   const handlePerformanceClick = (area, index) => {
     console.log("Perfomance clicked", area);
@@ -610,6 +698,9 @@ export default function ViewWorkPlan() {
 
   const handleSubmitWorkplan = (e) => {
     e.preventDefault();
+    // Use backend quarter if available, otherwise fall back to calendar-based period
+    const periodToUse = currentOpenQuarter || evaluationPeriod;
+    
     if (planStatus === "PendingApproval") {
       alert("Your Workplan is Waiting for approval so you cannot edit it");
     } else if (planStatus === "Approved") {
@@ -618,7 +709,7 @@ export default function ViewWorkPlan() {
       axiosClient
         .get("/workplan/searchWorkplan", {
           params: {
-            period: evaluationPeriod,
+            period: periodToUse,
             username: userName,
           },
         })
@@ -751,7 +842,9 @@ export default function ViewWorkPlan() {
           <Typography className="" sx={{ fontSize: 12 }}>
             <strong>
               Current Year Of Assessment:{" "}
-              <span style={{ color: "#309366" }}>{evaluationPeriod}</span>
+              <span style={{ color: "#309366" }}>
+                {!quarterLoading && currentOpenQuarter ? currentOpenQuarter : evaluationPeriod}
+              </span>
             </strong>
           </Typography>
         </div>
@@ -800,112 +893,134 @@ export default function ViewWorkPlan() {
         ) : null}
       </div>
       <div className={classes.root}>
-        <Box
-          sx={{
-            mt: 1,
-            ml: 4,
-            width: "95%",
-            typography: "body1",
-            fontWeight: "bold",
-            borderRadius: 20,
-            backgroundColor: "#e7e7e7",
-          }}
-        >
-          <Tabs
-            value={value}
-            onChange={handleChange}
-            aria-label="simple tabs example"
-            // textColor="secondary"
-            // indicatorColor="secondary"
-            variant="scrollable"
-            scrollButtons
-            allowScrollButtonsMobile
-          >
-            {performanceAreas &&
-              performanceAreas.map((area, index) => (
-                <Tab
-                  classes={tabItem3Styles}
-                  key={index}
-                  label={area && area.performanceArea}
-                  onClick={() => handlePerformanceClick(area, index)}
-                  sx={{
-                    fontSize: 8,
-                    color: "black",
-                    fontWeight: "bold",
-                    fontStyle: "sans-serif",
-                  }}
-                />
-              ))}
-            {/* <Tab label="Summary Scores" />
-          <Tab label="Signatures" /> */}
-          </Tabs>
-        </Box>
-
-        {performanceAreas.map((area, index) => (
-          <TabPanel key={index} value={value} index={index}>
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <h6 style={{ marginLeft: "11px", marginTop: "-9px" }}>
-                {area && area.section} - IRBM {area && area.performanceArea} (
-                <span style={{ color: "green" }}>{area && area.weight}%</span>)
-              </h6>
-              <Typography style={{ marginTop: "-10px", marginLeft: "600px" }}>
-                Workplan Status:{" "}
-                {planStatus === "pendingApproval"
-                  ? "Pending Approval"
-                  : planStatus}
+        {/* Show message when no workplan found for current quarter */}
+        {!quarterLoading && performanceAreas.length === 0 && (
+          <Box sx={{ ml: 4, mt: 2, p: 3, bgcolor: '#fff3e0', borderRadius: 1 }}>
+            <Typography variant="h6" color="error" gutterBottom>
+              No Workplan Found for Current Quarter
+            </Typography>
+            <Typography variant="body1">
+              There is no workplan for the current evaluation period. 
+              {currentOpenQuarter ? 
+                `The current open quarter is ${currentOpenQuarter}.` : 
+                "No quarter is currently open in the system."}
+            </Typography>
+            {!currentOpenQuarter && (
+              <Typography variant="body2" sx={{ mt: 1 }}>
+                Please contact the administrator to open a new quarter.
               </Typography>
-            </div>
+            )}
+          </Box>
+        )}
 
-            <div className="">
-              <Box
-                sx={{
-                  mt: 2,
-                  display: "flex",
-                  flexWrap: "wrap",
-                  "& > :not(style)": {
-                    m: 1,
-                    width: 1450,
-                    height: 520,
-                  },
-                }}
+        {performanceAreas.length > 0 && (
+          <>
+            <Box
+              sx={{
+                mt: 1,
+                ml: 4,
+                width: "95%",
+                typography: "body1",
+                fontWeight: "bold",
+                borderRadius: 20,
+                backgroundColor: "#e7e7e7",
+              }}
+            >
+              <Tabs
+                value={value}
+                onChange={handleChange}
+                aria-label="simple tabs example"
+                // textColor="secondary"
+                // indicatorColor="secondary"
+                variant="scrollable"
+                scrollButtons
+                allowScrollButtonsMobile
               >
-                <TableContainer component={Paper}>
-                  <Table aria-label="collapsible table">
-                    {/* <caption>A basic table example with a caption</caption> */}
-                    <TableHead>
-                      <TableRow>
-                        <TableCell />
-                        <TableCell>Program</TableCell>
-                        <TableCell align="center">Weight&nbsp;(%)</TableCell>
-                        <TableCell align="center">
-                          Current Evaluation Period
-                        </TableCell>
+                {performanceAreas &&
+                  performanceAreas.map((area, index) => (
+                    <Tab
+                      classes={tabItem3Styles}
+                      key={index}
+                      label={area && area.performanceArea}
+                      onClick={() => handlePerformanceClick(area, index)}
+                      sx={{
+                        fontSize: 8,
+                        color: "black",
+                        fontWeight: "bold",
+                        fontStyle: "sans-serif",
+                      }}
+                    />
+                  ))}
+                {/* <Tab label="Summary Scores" />
+          <Tab label="Signatures" /> */}
+              </Tabs>
+            </Box>
 
-                        <TableCell align="center">
-                          Total Number of Indicators
-                        </TableCell>
-                        <TableCell align="center"></TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {area &&
-                        area.programs &&
-                        area.programs.map((program, index) => (
-                          <Row
-                            key={index}
-                            program={program}
-                            area={area}
-                            planStatus={planStatus}
-                            performanceAreasParsed={performanceAreas}
-                            profileData={profileData}
-                          />
-                        ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </Box>
-              <div style={{ display: "flex", flexDirection: "row" }}>
-                {/* <Typography
+            {performanceAreas.map((area, index) => (
+              <TabPanel key={index} value={value} index={index}>
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <h6 style={{ marginLeft: "11px", marginTop: "-9px" }}>
+                    {area && area.section} - IRBM {area && area.performanceArea} (
+                    <span style={{ color: "green" }}>{area && area.weight}%</span>)
+                  </h6>
+                  <Typography style={{ marginTop: "-10px", marginLeft: "600px" }}>
+                    Workplan Status:{" "}
+                    {planStatus === "pendingApproval"
+                      ? "Pending Approval"
+                      : planStatus}
+                  </Typography>
+                </div>
+
+                <div className="">
+                  <Box
+                    sx={{
+                      mt: 2,
+                      display: "flex",
+                      flexWrap: "wrap",
+                      "& > :not(style)": {
+                        m: 1,
+                        width: 1450,
+                        height: 520,
+                      },
+                    }}
+                  >
+                    <TableContainer component={Paper}>
+                      <Table aria-label="collapsible table">
+                        {/* <caption>A basic table example with a caption</caption> */}
+                        <TableHead>
+                          <TableRow>
+                            <TableCell />
+                            <TableCell>Program</TableCell>
+                            <TableCell align="center">Weight&nbsp;(%)</TableCell>
+                            <TableCell align="center">
+                              Current Evaluation Period
+                            </TableCell>
+
+                            <TableCell align="center">
+                              Total Number of Indicators
+                            </TableCell>
+                            <TableCell align="center"></TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {area &&
+                            area.programs &&
+                            area.programs.map((program, index) => (
+                              <Row
+                                key={index}
+                                program={program}
+                                area={area}
+                                planStatus={planStatus}
+                                performanceAreasParsed={performanceAreas}
+                                profileData={profileData}
+                              />
+                            ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </Box>
+                  <div style={{ display: "flex", flexDirection: "row" }}>
+                    {/* <Typography
                   style={{ marginLeft: "150px", marginRight: "50px" }}
                 >
                   Total Weight:
@@ -920,50 +1035,107 @@ export default function ViewWorkPlan() {
                 >
                   30.0%
                 </Typography> */}
-              </div>
-            </div>
-            <br />
-            <div>
-              <Typography
-                style={{
-                  color: "green",
-                }}
-              >
-                Section A1 : Delivery of Mandates / Operations in the Agency
-                Integrated Performance Agreement - Evaluation of Outcomes
-              </Typography>
-              <Typography style={{}}>
-                Current Evaluation Period : 01 July - 30 September 2024
-              </Typography>
-              <Typography>Name of Appraiser : _____________ </Typography>
+                  </div>
+                </div>
+                <br />
 
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "row",
-                }}
-              >
-                <Typography>Designation : _____________ </Typography>
+                {/* Single Elegant Card with All Details */}
+                <Card sx={{
+                  boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+                  borderRadius: "8px",
+                  border: "1px solid #f5f5f5",
+                  marginBottom: "50px"
+                }}>
+                  <CardContent sx={{ padding: "40px" }}>
+                    {/* Evaluation Period - Subtle Header */}
+                    <Typography style={{ fontSize: "12px", fontWeight: "600", color: "#999", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "4px" }}>
+                      Current Evaluation Period
+                    </Typography>
+                    <Typography style={{ fontSize: "18px", fontWeight: "500", color: "#309366", marginBottom: "32px" }}>
+                      {dateRange}
+                    </Typography>
+
+                    {/* Divider */}
+                    <div style={{ height: "1px", backgroundColor: "#f0f0f0", marginBottom: "32px" }}></div>
+
+                    {/* Appraisee and Appraiser in Single Row */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1px 1fr", gap: "40px" }}>
+
+                      {/* Appraisee */}
+                      <div>
+                        <Typography style={{ fontSize: "11px", fontWeight: "700", color: "#ccc", textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: "20px" }}>
+                          Appraisee
+                        </Typography>
+
+                        <div style={{ marginBottom: "24px" }}>
+                          <Typography style={{ fontSize: "11px", fontWeight: "600", color: "#bbb", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "6px" }}>
+                            Name
+                          </Typography>
+                          <Typography style={{ fontSize: "14px", color: "#1a1a1a", fontWeight: "500" }}>
+                            {workplanData.user_email || userName || "_______________"}
+                          </Typography>
+                        </div>
+
+                        <div>
+                          <Typography style={{ fontSize: "11px", fontWeight: "600", color: "#bbb", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "6px" }}>
+                            Date Submitted
+                          </Typography>
+                          <Typography style={{ fontSize: "14px", color: "#1a1a1a", fontWeight: "500" }}>
+                            {workplanData.dateSubmitted ? new Date(workplanData.dateSubmitted).toLocaleDateString() : "_______________"}
+                          </Typography>
+                        </div>
+                      </div>
+
+                      {/* Vertical Divider */}
+                      <div style={{ backgroundColor: "#f0f0f0", width: "1px", minHeight: "100%" }}></div>
+
+                      {/* Appraiser */}
+                      <div>
+                        <Typography style={{ fontSize: "11px", fontWeight: "700", color: "#ccc", textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: "20px" }}>
+                          Appraiser
+                        </Typography>
+
+                        <div style={{ marginBottom: "24px" }}>
+                          <Typography style={{ fontSize: "11px", fontWeight: "600", color: "#bbb", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "6px" }}>
+                            Name
+                          </Typography>
+                          <Typography style={{ fontSize: "14px", color: "#1a1a1a", fontWeight: "500" }}>
+                            {workplanData.evaluator_email || "_______________"}
+                          </Typography>
+                        </div>
+
+                        <div>
+                          <Typography style={{ fontSize: "11px", fontWeight: "600", color: "#bbb", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "6px" }}>
+                            Date Approved
+                          </Typography>
+                          <Typography style={{ fontSize: "14px", color: "#1a1a1a", fontWeight: "500" }}>
+                            {workplanData.dateApproved ? new Date(workplanData.dateApproved).toLocaleDateString() : "_______________"}
+                          </Typography>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
 
                 <div
                   className="btn-saveWorkPlan"
                   style={{ marginLeft: "550px" }}
                 >
                   {/* {planStatus !== "WorkingScorecard" &&
-                    planStatus !== "Approved" && (
-                      <button
-                        onClick={handleSubmitWorkplan}
-                        className="workplan-btn"
-                        style={{
-                          borderRadius: "25px",
-                          marginLeft: "180px",
-                          width: "160px",
-                          marginTop: "-70px",
-                        }}
-                      >
-                        Submit For Approval
-                      </button>
-                    )} */}
+                planStatus !== "Approved" && (
+                  <button
+                    onClick={handleSubmitWorkplan}
+                    className="workplan-btn"
+                    style={{
+                      borderRadius: "25px",
+                      marginLeft: "180px",
+                      width: "160px",
+                      marginTop: "-70px",
+                    }}
+                  >
+                    Submit For Approval
+                  </button>
+                )} */}
                   {planStatus !== "pendingApproval" &&
                   planStatus !== "Rejected" &&
                   planStatus !== "Approved" ? (
@@ -1051,10 +1223,10 @@ export default function ViewWorkPlan() {
                     </p>
                   ) : null}
                 </div>
-              </div>
-            </div>
-          </TabPanel>
-        ))}
+              </TabPanel>
+            ))}
+          </>
+        )}
       </div>
     </>
   );
