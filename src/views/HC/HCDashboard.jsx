@@ -581,7 +581,7 @@ const HCDashboard = () => {
           <Box className="header-text">
             <Typography variant="h4" className="dashboard-title">
               <RiIcons.RiDashboardLine className="header-icon" />
-              Human Capital Executive Dashboard
+              Human Capital Dashboard
             </Typography>
             <Typography variant="subtitle1" className="dashboard-subtitle">
               <MdIcons.MdTrendingUp className="subtitle-icon" />
@@ -650,7 +650,7 @@ const HCDashboard = () => {
                     {animatedStats.submitted}
                   </Typography>
                   <Typography variant="body2" className="kpi-label">
-                    Submitted IRBMs
+                    Submitted IRBMs To Appraiser
                   </Typography>
                 </Box>
                 <Box className="kpi-trend positive">
@@ -684,7 +684,7 @@ const HCDashboard = () => {
           </Grow>
         </Grid>
 
-        <Grid item xs={12} sm={6} md={2.4}>
+        {/* <Grid item xs={12} sm={6} md={2.4}>
           <Grow in={true} timeout={400}>
             <Card className="kpi-card gradient-purple">
               <CardContent>
@@ -709,7 +709,7 @@ const HCDashboard = () => {
               </CardContent>
             </Card>
           </Grow>
-        </Grid>
+        </Grid> */}
 
         <Grid item xs={12} sm={6} md={2.4}>
           <Grow in={true} timeout={500}>

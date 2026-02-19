@@ -258,11 +258,27 @@ const WorkingScoreCard = () => {
           setResponseBody(appraiseeWorkplanArray);
           console.log(appraiseeWorkplanArray);
 
-          const areasOfPerformance = response.data.content[0].AreasOfPerformance;
+          console.log("Full workplan response:", response.data);
+          
+          // Handle both possible response structures
+          let workplanData = null;
+          if (response.data.content && response.data.content.length > 0) {
+            workplanData = response.data.content[0];
+          } else if (Array.isArray(response.data)) {
+            workplanData = response.data[0];
+          }
+          
+          console.log("Workplan data:", workplanData);
+          
+          const areasOfPerformance = workplanData?.AreasOfPerformance || workplanData?.areasOfPerformance;
 
           console.log("performance Workplan", areasOfPerformance);
 
-          setPerformanceAreas(areasOfPerformance);
+          if (areasOfPerformance) {
+            setPerformanceAreas(areasOfPerformance);
+          } else {
+            setPerformanceAreas([]);
+          }
           console.log(performanceAreas);
         } catch (error) {
           console.error(error);
@@ -400,7 +416,7 @@ const WorkingScoreCard = () => {
 
   const performanceArea =
     performanceAreas &&
-    performanceAreas.find((area) => area.id === selectedPerformance);
+    performanceAreas.find((area) => area.performanceArea === selectedPerfomance);
 
   const handleUpdateDialog = (id) => {
     setId(id);
@@ -455,13 +471,33 @@ const WorkingScoreCard = () => {
 
   const handleSubmitIndicators = async (e) => {
     e.preventDefault();
+    
+    // Get the performance area name from the ref or from currentPerformanceData
+    const performanceAreaName = performanceRef.current?.value || currentPerformanceData?.performanceArea;
+    
+    console.log("Performance area name from ref:", performanceRef.current?.value);
+    console.log("Performance area name from state:", currentPerformanceData?.performanceArea);
+    console.log("Final performance area name:", performanceAreaName);
+    console.log("Available performance areas:", performanceAreas);
+    
+    if (!performanceAreaName) {
+      setMessage("Performance area not selected");
+      return;
+    }
+    
     const updatedPerformanceArea =
       performanceAreas &&
       performanceAreas.find(
-        (area) => area.performanceArea === performanceRef.current.value
+        (area) => area.performanceArea === performanceAreaName
       );
 
-    console.log(updatedPerformanceArea);
+    console.log("Found performance area:", updatedPerformanceArea);
+
+    // Check if performance area was found
+    if (!updatedPerformanceArea) {
+      setMessage("Performance area not found in your workplan");
+      return;
+    }
 
     // Check if a file is attached
     console.log(selectedFile);
@@ -509,7 +545,7 @@ const WorkingScoreCard = () => {
 
               // Find the existing performance area
               const existingPerformanceArea = existingAreasOfPerformance.find(
-                (area) => area.performanceArea === performanceRef.current.value
+                (area) => area.performanceArea === (performanceRef.current?.value || currentPerformanceData?.performanceArea)
               );
 
               if (existingPerformanceArea) {

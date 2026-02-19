@@ -730,10 +730,18 @@ export default function ViewWorkPlan() {
 
             const hasEmptyIndicators = areasOfPerformanceData.some(
               (performanceArea) => {
+                // Skip empty performance areas
+                if (!performanceArea || !performanceArea.performanceArea || performanceArea.performanceArea.trim() === '') {
+                  return false;
+                }
                 return (
                   performanceArea &&
                   performanceArea.programs &&
                   performanceArea.programs.some((program) => {
+                    // Skip programs with empty names
+                    if (!program || !program.name || program.name.trim() === '') {
+                      return false;
+                    }
                     return program.indicators.length === 0;
                   })
                 );
