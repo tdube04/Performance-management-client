@@ -311,19 +311,25 @@ function Row({
                         </TableCell>
                         <TableCell align="center" style={{ width: "10%" }}>
                           {indicator.appraisee_actual_perfomance !== null &&
-                          indicator.appraisee_actual_perfomance !== 0
+                          indicator.appraisee_actual_perfomance !== undefined &&
+                          indicator.appraisee_actual_perfomance !== "" &&
+                          !isNaN(parseFloat(indicator.appraisee_actual_perfomance))
                             ? indicator.appraisee_actual_perfomance
                             : "___"}
                         </TableCell>
                         <TableCell align="center" style={{ width: "10%" }}>
                           {indicator.appraiseeScore !== null &&
-                          indicator.appraiseeScore !== 0
+                          indicator.appraiseeScore !== undefined &&
+                          indicator.appraiseeScore !== "" &&
+                          !isNaN(parseFloat(indicator.appraiseeScore))
                             ? indicator.appraiseeScore
                             : "___"}
                         </TableCell>
                         <TableCell align="center" style={{ width: "10%" }}>
                           {indicator.agreedWeightedScore !== null &&
-                          indicator.agreedWeightedScore !== 0
+                          indicator.agreedWeightedScore !== undefined &&
+                          indicator.agreedWeightedScore !== "" &&
+                          !isNaN(parseFloat(indicator.agreedWeightedScore))
                             ? indicator.agreedWeightedScore
                             : "___"}
                         </TableCell>
@@ -924,7 +930,7 @@ export default function ResultScoreCard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosClient.get(`/User/{id}?id=${userName}`);
+        const response = await axiosClient.get(`/User/${userName}`);
         setProfileData(response.data);
         console.log("My Appraiser profile");
         console.log(response.data);
@@ -1695,29 +1701,43 @@ export default function ResultScoreCard() {
         button: "OK!",
       });
     } else {
-      // Check for indicators without appraisee_actual_performance value
+      // Check for indicators without appraiseeScore value (skip empty/invalid performance areas)
       const hasMissingValues = responseBody.content[0].areasOfPerformance.some(
-        (area) =>
-          area.programs.some((program) =>
-            program.indicators.some((indicator) => {
-              const value = indicator.appraisee_actual_perfomance;
+        (area) => {
+          // Skip validation for empty/invalid performance areas
+          if (!area.performanceArea || area.performanceArea.trim() === "") {
+            return false;
+          }
+          return area.programs.some((program) => {
+            // Skip validation for empty/invalid programs
+            if (!program.name || program.name.trim() === "") {
+              return false;
+            }
+            return program.indicators.some((indicator) => {
+              const value = indicator.appraiseeScore;
               console.log(value);
+              // Prevent submission if appraiseeScore is 0, null, undefined, or empty
               return (
                 value === null ||
+                value === undefined ||
                 value === "" ||
+                value === 0 ||
                 (typeof value === "string" && value.trim() === "") ||
-                isNaN(parseFloat(value))
+                (typeof value === "number" && isNaN(value)) ||
+                (typeof value === "string" && isNaN(parseFloat(value)))
               );
-            })
-          )
+            });
+          });
+        }
       );
       console.log(hasMissingValues);
       if (hasMissingValues) {
         swal({
-          text: "Please check provided values for all indicators",
+          text: "Please provide appraisee scores for ALL indicators before submitting. No indicator can be left blank.",
           icon: "warning",
           button: "OK!",
         });
+        return; // Exit early to prevent submission
       } else {
         axiosClient
           .get("/scorecard/searchScorecard", {
