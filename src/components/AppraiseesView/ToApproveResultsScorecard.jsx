@@ -217,7 +217,7 @@ function Row({
                     </TableCell>
 
                     <TableCell align="right" style={{ width: "10%" }}>
-                      Annual Target for 2023(%)
+                      Annual Target for {currentYear}(%)
                     </TableCell>
                     <TableCell align="right" style={{ width: "10%" }}>
                       Allowable Variance
@@ -226,7 +226,7 @@ function Row({
                       Actual Performance(%)
                     </TableCell>
                     <TableCell align="right" style={{ width: "10%" }}>
-                      Target for 2023(%)
+                      Target for {currentYear}(%)
                     </TableCell>
 
                     <TableCell align="right" style={{ width: "10%" }}>
@@ -860,6 +860,7 @@ const getCurrentEvaluationPeriod = () => {
 
   return {
     evaluationPeriod: `${currentYear}-${quarter}`,
+    currentYear: currentYear,
     daysRemaining: daysRemaining,
   };
 };

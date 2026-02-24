@@ -1221,7 +1221,7 @@ export default function ViewWorkPlan() {
                       style={{
                         borderRadius: "9px",
                         height: "25px",
-                        width: "110%",
+                        width: "23%",
                         backgroundColor: "#69b33e",
                         paddingLeft: "19px",
                         fontWeight: "bold",

@@ -91,6 +91,7 @@ const getCurrentEvaluationPeriod = () => {
 
   return {
     evaluationPeriod: `${currentYear}-${quarter}`,
+    currentYear: currentYear,
     daysRemaining: daysRemaining,
   };
 };
@@ -143,7 +144,7 @@ const UpdateWorkPlan = () => {
 
   const [performances, setPerformances] = useState([]);
 
-  const { evaluationPeriod, daysRemaining } = getCurrentEvaluationPeriod();
+  const { evaluationPeriod, currentYear, daysRemaining } = getCurrentEvaluationPeriod();
 
   const [performanceAreas, setPerformanceAreas] = useState([]);
 
@@ -1175,7 +1176,7 @@ const UpdateWorkPlan = () => {
                   marginBottom: "5px",
                 }}
               >
-                <label> Annual Target for 2023(%): </label>
+                <label> Annual Target for {currentYear}(%): </label>
                 <input
                   defaultValue={
                     currentIndicatorData && currentIndicatorData.annual_target
@@ -1214,7 +1215,7 @@ const UpdateWorkPlan = () => {
                   marginBottom: "5px",
                 }}
               >
-                <label> Target for 2023: </label>
+                <label> Current Quarter Target: </label>
                 <input
                   defaultValue={
                     currentIndicatorData &&

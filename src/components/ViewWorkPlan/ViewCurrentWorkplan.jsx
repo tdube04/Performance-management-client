@@ -75,6 +75,16 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+const getCurrentEvaluationPeriod = () => {
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  return {
+    currentYear: currentYear,
+  };
+};
+
+const { currentYear } = getCurrentEvaluationPeriod();
+
 const Row = ({ program }) => {
   const [open, setOpen] = useState(false);
   const classes = useStyles();
@@ -118,7 +128,7 @@ const Row = ({ program }) => {
                       Previous Performance
                     </TableCell>
                     <TableCell align="right" style={{ width: "10%" }}>
-                      Annual Target for 2023
+                      Annual Target for {currentYear}
                     </TableCell>
                     <TableCell align="right" style={{ width: "10%" }}>
                       Allowable Variance
@@ -127,7 +137,7 @@ const Row = ({ program }) => {
                       Actual Performance
                     </TableCell>
                     <TableCell align="right" style={{ width: "10%" }}>
-                      Target for 2023
+                      Target for {currentYear}
                     </TableCell>
                     <TableCell align="right" style={{ width: "10%" }}>
                       Agreed Weighted Score

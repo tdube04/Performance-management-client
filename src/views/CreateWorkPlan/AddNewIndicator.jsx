@@ -129,6 +129,7 @@ const animatedComponents = makeAnimated();
 
 const AddNewIndicator = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const classes = useStyles();
   const sectionRef = useRef();
   const weightRef = useRef(null);
@@ -623,17 +624,22 @@ const AddNewIndicator = () => {
                                 );
                               }
                               setIsFormSubmitted(true);
+                              // Clear form fields after successful submission
                               indicatorRef.current.value = "";
-
                               weightRef.current.value = "";
-                              // selectedPerfomance = "";
-                              // selectedProgram = "";
-                              // selectedMeasurement = "";
-                              // selectedDivision = "";
-                              // prevPerformanceRef.current.value = "";
                               annualTargetRef.current.value = "";
                               varianceRef.current.value = "";
                               targetRef.current.value = "";
+                              // Clear state variables
+                              setSelectedMeasurement("");
+                              setSelectedDivision("");
+                              setSelectedSection("");
+                              setSelectedIncrementDecrement("");
+                              setSelectedResources([]);
+                              setOtherMeasurement("");
+                              setMessage("");
+                              // Redirect to viewWorkPlan after successful submission
+                              navigate("/viewWorkPlan");
                             }
                           })
                           .catch((err) => {
@@ -706,8 +712,22 @@ const AddNewIndicator = () => {
                       target: targetRef.current.value,
                     });
                     setIsFormSubmitted(true);
+                    // Clear form fields after successful submission
                     indicatorRef.current.value = "";
                     weightRef.current.value = "";
+                    annualTargetRef.current.value = "";
+                    varianceRef.current.value = "";
+                    targetRef.current.value = "";
+                    // Clear state variables
+                    setSelectedMeasurement("");
+                    setSelectedDivision("");
+                    setSelectedSection("");
+                    setSelectedIncrementDecrement("");
+                    setSelectedResources([]);
+                    setOtherMeasurement("");
+                    setMessage("");
+                    // Redirect to viewWorkPlan after successful submission
+                    navigate("/viewWorkPlan");
                   })
                   .catch((err) => {
                     console.log(err);

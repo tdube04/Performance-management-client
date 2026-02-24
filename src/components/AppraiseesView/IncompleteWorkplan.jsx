@@ -121,16 +121,14 @@ function Row({ program }) {
                     </TableCell>
 
                     <TableCell align="right" style={{ width: "10%" }}>
-                      Annual Target for 2023(%)
+                      Annual Target for {currentYear}(%)
                     </TableCell>
                     <TableCell align="right" style={{ width: "10%" }}>
                       Allowable Variance
                     </TableCell>
+                  
                     <TableCell align="right" style={{ width: "10%" }}>
-                      Actual Performance(%)
-                    </TableCell>
-                    <TableCell align="right" style={{ width: "10%" }}>
-                      Target for 2023(%)
+                      Target for {currentYear}(%)
                     </TableCell>
 
                     <TableCell align="right" style={{ width: "10%" }}>
@@ -161,9 +159,9 @@ function Row({ program }) {
                         <TableCell align="center" style={{ width: "10%" }}>
                           {indicator.incremental_or_decremental}
                         </TableCell>
-                        <TableCell align="center" style={{ width: "10%" }}>
+                        {/* <TableCell align="center" style={{ width: "10%" }}>
                           {indicator.previous_year_Perfomenace}
-                        </TableCell>
+                        </TableCell> */}
 
                         <TableCell align="center" style={{ width: "10%" }}>
                           {indicator.annual_target}
@@ -246,6 +244,7 @@ const getCurrentEvaluationPeriod = () => {
 
   return {
     evaluationPeriod: `${currentYear}-${quarter}`,
+    currentYear: currentYear,
     daysRemaining: daysRemaining,
   };
 };
