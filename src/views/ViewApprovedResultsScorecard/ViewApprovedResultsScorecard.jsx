@@ -153,6 +153,12 @@ function Row({ program, area, selectedAppraisee }) {
                       Responsible Division
                     </TableCell>
                     <TableCell align="right" style={{ width: "10%" }}>
+                      Responsible Section
+                    </TableCell>
+                    <TableCell align="right" style={{ width: "10%" }}>
+                      Responsible Resource
+                    </TableCell>
+                    <TableCell align="right" style={{ width: "10%" }}>
                       Comment
                     </TableCell>
                     <TableCell align="right" style={{ width: "10%" }}>
@@ -209,6 +215,14 @@ function Row({ program, area, selectedAppraisee }) {
                         </TableCell>
                         <TableCell align="center" style={{ width: "10%" }}>
                           {indicator.responsibleDivision}
+                        </TableCell>
+                        <TableCell align="center" style={{ width: "10%" }}>
+                          {indicator.responsibleSection || "____________"}
+                        </TableCell>
+                        <TableCell align="center" style={{ width: "10%" }}>
+                          {indicator.responsibleResources && indicator.responsibleResources.length > 0 
+                            ? indicator.responsibleResources.map(r => r.username || r).join(", ") 
+                            : "____________"}
                         </TableCell>
                         <TableCell align="center" style={{ width: "10%" }}>
                           {indicator.perfomanceComment}

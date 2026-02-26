@@ -136,6 +136,12 @@ function Row({ program }) {
                     <TableCell align="right" style={{ width: "10%" }}>
                       Responsible Division
                     </TableCell>
+                    <TableCell align="right" style={{ width: "10%" }}>
+                      Responsible Section
+                    </TableCell>
+                    <TableCell align="right" style={{ width: "10%" }}>
+                      Responsible Resource
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -177,6 +183,14 @@ function Row({ program }) {
                         </TableCell>
                         <TableCell align="center" style={{ width: "10%" }}>
                           {indicator.responsibleDivision}
+                        </TableCell>
+                        <TableCell align="center" style={{ width: "10%" }}>
+                          {indicator.responsibleSection || "____________"}
+                        </TableCell>
+                        <TableCell align="center" style={{ width: "10%" }}>
+                          {indicator.responsibleResources && indicator.responsibleResources.length > 0 
+                            ? indicator.responsibleResources.map(r => r.username || r).join(", ") 
+                            : "____________"}
                         </TableCell>
                       </TableRow>
                     ))}

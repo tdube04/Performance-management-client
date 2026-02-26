@@ -230,9 +230,6 @@ function Row({
                     </TableCell>
 
                     <TableCell align="right" style={{ width: "10%" }}>
-                      Responsible Division
-                    </TableCell>
-                    <TableCell align="right" style={{ width: "10%" }}>
                       Comment
                     </TableCell>
                     <TableCell align="right" style={{ width: "10%" }}>
@@ -289,9 +286,6 @@ function Row({
 
                         <TableCell align="center" style={{ width: "10%" }}>
                           {indicator.quarterly_target}
-                        </TableCell>
-                        <TableCell align="center" style={{ width: "10%" }}>
-                          {indicator.responsibleDivision}
                         </TableCell>
                         <TableCell align="center" style={{ width: "10%" }}>
                           {indicator.perfomanceComment}
@@ -472,6 +466,26 @@ function Row({
                               }}
                             >
                               <Typography variant="body2" sx={{ mt: 6 }}>
+                                Responsible Section:
+                              </Typography>
+                            </div>
+                            <div
+                              style={{
+                                backgroundColor: "#f5f5f5",
+                                padding: "5px",
+                              }}
+                            >
+                              <Typography variant="body2" sx={{ mt: 6 }}>
+                                Responsible Resource:
+                              </Typography>
+                            </div>
+                            <div
+                              style={{
+                                backgroundColor: "#ffffff",
+                                padding: "5px",
+                              }}
+                            >
+                              <Typography variant="body2" sx={{ mt: 6 }}>
                                 Comment:
                               </Typography>
                               <Typography
@@ -571,6 +585,31 @@ function Row({
                               <Typography variant="body2" sx={{ mt: 6 }}>
                                 {selectedIndicator &&
                                   selectedIndicator.responsibleDivision}
+                              </Typography>
+                            </div>
+                            <div
+                              style={{
+                                backgroundColor: "#ffffff",
+                                padding: "5px",
+                              }}
+                            >
+                              <Typography variant="body2" sx={{ mt: 6 }}>
+                                {selectedIndicator &&
+                                  (selectedIndicator.responsibleSection || "_______________")}
+                              </Typography>
+                            </div>
+                            <div
+                              style={{
+                                backgroundColor: "#f5f5f5",
+                                padding: "5px",
+                              }}
+                            >
+                              <Typography variant="body2" sx={{ mt: 6 }}>
+                                {selectedIndicator &&
+                                  selectedIndicator.responsibleResources &&
+                                  selectedIndicator.responsibleResources.length > 0
+                                  ? selectedIndicator.responsibleResources.map(r => r.username || r).join(", ")
+                                  : "_______________"}
                               </Typography>
                             </div>
                           </div>

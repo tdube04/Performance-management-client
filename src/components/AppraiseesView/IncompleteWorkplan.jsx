@@ -46,6 +46,9 @@ import { useParams } from "react-router-dom";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import IconButton from "@mui/material/IconButton";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import InfoIcon from "@mui/icons-material/Info";
+import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import queryString from "query-string";
 import { useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
@@ -58,6 +61,12 @@ import DialogActions from "@material-ui/core/DialogActions";
 import DialogContent from "@material-ui/core/DialogContent";
 import DialogTitle from "@material-ui/core/DialogTitle";
 
+import List from "@mui/joy/List";
+import ListItem from "@mui/joy/ListItem";
+import ListSubheader from "@mui/joy/ListSubheader";
+import ListItemButton from "@mui/joy/ListItemButton";
+import Sheet from "@mui/joy/Sheet";
+
 import {
   useGmailTabsStyles,
   useGmailTabItemStyles,
@@ -66,6 +75,8 @@ import { useStateContext } from "../../context/ContextProvider";
 
 function Row({ program }) {
   const [open, setOpen] = React.useState(false);
+  const [modalViewOpen, setModalViewOpen] = useState(false);
+  const [selectedIndicator, setSelectedIndicator] = useState(null);
   const classes = useStyles();
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
@@ -73,6 +84,11 @@ function Row({ program }) {
   console.log("Total indicators: ", program.indicators.length);
 
   const { evaluationPeriod, daysRemaining } = getCurrentEvaluationPeriod();
+
+  const handleIndicatorViewDialog = async (indicator) => {
+    setSelectedIndicator(indicator);
+    setModalViewOpen(true);
+  };
 
   return (
     <React.Fragment>
@@ -134,6 +150,15 @@ function Row({ program }) {
                     <TableCell align="right" style={{ width: "10%" }}>
                       Responsible Division
                     </TableCell>
+                    <TableCell align="right" style={{ width: "10%" }}>
+                      Responsible Section
+                    </TableCell>
+                    <TableCell align="right" style={{ width: "10%" }}>
+                      Responsible Resource
+                    </TableCell>
+                    <TableCell align="right" style={{ width: "10%" }}>
+                      Action
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -176,6 +201,21 @@ function Row({ program }) {
                         <TableCell align="center" style={{ width: "10%" }}>
                           {indicator.responsibleDivision}
                         </TableCell>
+                        <TableCell align="center" style={{ width: "10%" }}>
+                          {indicator.responsibleSection || "____________"}
+                        </TableCell>
+                        <TableCell align="center" style={{ width: "10%" }}>
+                          {indicator.responsibleResources && indicator.responsibleResources.length > 0 
+                            ? indicator.responsibleResources.map(r => r.username || r).join(", ") 
+                            : "____________"}
+                        </TableCell>
+                        <TableCell align="center" style={{ width: "10%" }}>
+                          <IconButton
+                            onClick={() => handleIndicatorViewDialog(indicator)}
+                          >
+                            <VisibilityIcon sx={{ fontSize: "15px", color: "green" }} />
+                          </IconButton>
+                        </TableCell>
                       </TableRow>
                     ))}
                 </TableBody>
@@ -184,6 +224,252 @@ function Row({ program }) {
           </Collapse>
         </TableCell>
       </TableRow>
+      <Dialog
+        open={modalViewOpen}
+        onClose={() => setModalViewOpen(false)}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+        fullWidth
+      >
+        <DialogContent>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Typography
+              variant="subtitle1"
+              sx={{ mt: 6, fontWeight: "bold" }}
+            >
+              <InfoIcon
+                sx={{
+                  fontSize: "15px",
+                  color: "green",
+                }}
+              />{" "}
+              Indicator Details
+            </Typography>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "570px",
+              marginRight: "0px",
+              marginLeft: "-14px",
+            }}
+          >
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "auto 1fr",
+                width: "570px",
+              }}
+            >
+              <div>
+                <div
+                  style={{
+                    backgroundColor: "#f5f5f5",
+                    padding: "5px",
+                  }}
+                >
+                  <Typography variant="body2" sx={{ mt: 6 }}>
+                    Indicator Name:
+                  </Typography>
+                </div>
+                <div
+                  style={{
+                    backgroundColor: "#ffffff",
+                    padding: "5px",
+                  }}
+                >
+                  <Typography variant="body2" sx={{ mt: 6 }}>
+                    Indicator Weight:
+                  </Typography>
+                </div>
+                <div
+                  style={{
+                    backgroundColor: "#f5f5f5",
+                    padding: "5px",
+                  }}
+                >
+                  <Typography variant="body2" sx={{ mt: 6 }}>
+                    Incremental/Decremental:
+                  </Typography>
+                </div>
+                <div
+                  style={{
+                    backgroundColor: "#ffffff",
+                    padding: "5px",
+                  }}
+                >
+                  <Typography variant="body2" sx={{ mt: 6 }}>
+                    Annual Target:
+                  </Typography>
+                </div>
+                <div
+                  style={{
+                    backgroundColor: "#f5f5f5",
+                    padding: "5px",
+                  }}
+                >
+                  <Typography variant="body2" sx={{ mt: 6 }}>
+                    Allowable Variance:
+                  </Typography>
+                </div>
+                <div
+                  style={{
+                    backgroundColor: "#ffffff",
+                    padding: "5px",
+                  }}
+                >
+                  <Typography variant="body2" sx={{ mt: 6 }}>
+                    Quarterly Target:
+                  </Typography>
+                </div>
+                <div
+                  style={{
+                    backgroundColor: "#f5f5f5",
+                    padding: "5px",
+                  }}
+                >
+                  <Typography variant="body2" sx={{ mt: 6 }}>
+                    Responsible Division:
+                  </Typography>
+                </div>
+                <div
+                  style={{
+                    backgroundColor: "#ffffff",
+                    padding: "5px",
+                  }}
+                >
+                  <Typography variant="body2" sx={{ mt: 6 }}>
+                    Responsible Section:
+                  </Typography>
+                </div>
+                <div
+                  style={{
+                    backgroundColor: "#f5f5f5",
+                    padding: "5px",
+                  }}
+                >
+                  <Typography variant="body2" sx={{ mt: 6 }}>
+                    Responsible Resource:
+                  </Typography>
+                </div>
+              </div>
+              <div>
+                <div
+                  style={{
+                    backgroundColor: "#f5f5f5",
+                    padding: "5px",
+                  }}
+                >
+                  <Typography variant="body2" sx={{ mt: 6 }}>
+                    {selectedIndicator && selectedIndicator.description}
+                  </Typography>
+                </div>
+                <div
+                  style={{
+                    backgroundColor: "#ffffff",
+                    padding: "5px",
+                  }}
+                >
+                  <Typography variant="body2" sx={{ mt: 6 }}>
+                    {selectedIndicator && selectedIndicator.weight}
+                    {selectedIndicator && selectedIndicator.measurement_unit}
+                  </Typography>
+                </div>
+                <div
+                  style={{
+                    backgroundColor: "#f5f5f5",
+                    padding: "5px",
+                  }}
+                >
+                  <Typography variant="body2" sx={{ mt: 6 }}>
+                    {selectedIndicator && selectedIndicator.incremental_or_decremental}
+                  </Typography>
+                </div>
+                <div
+                  style={{
+                    backgroundColor: "#ffffff",
+                    padding: "5px",
+                  }}
+                >
+                  <Typography variant="body2" sx={{ mt: 6 }}>
+                    {selectedIndicator && selectedIndicator.annual_target}
+                  </Typography>
+                </div>
+                <div
+                  style={{
+                    backgroundColor: "#f5f5f5",
+                    padding: "5px",
+                  }}
+                >
+                  <Typography variant="body2" sx={{ mt: 6 }}>
+                    {selectedIndicator && selectedIndicator.allowable_variance}
+                    {selectedIndicator && selectedIndicator.measurement_unit}
+                  </Typography>
+                </div>
+                <div
+                  style={{
+                    backgroundColor: "#ffffff",
+                    padding: "5px",
+                  }}
+                >
+                  <Typography variant="body2" sx={{ mt: 6 }}>
+                    {selectedIndicator && selectedIndicator.quarterly_target}
+                    {selectedIndicator && selectedIndicator.measurement_unit}
+                  </Typography>
+                </div>
+                <div
+                  style={{
+                    backgroundColor: "#f5f5f5",
+                    padding: "5px",
+                  }}
+                >
+                  <Typography variant="body2" sx={{ mt: 6 }}>
+                    {selectedIndicator && selectedIndicator.responsibleDivision}
+                  </Typography>
+                </div>
+                <div
+                  style={{
+                    backgroundColor: "#ffffff",
+                    padding: "5px",
+                  }}
+                >
+                  <Typography variant="body2" sx={{ mt: 6 }}>
+                    {selectedIndicator && (selectedIndicator.responsibleSection || "_______________")}
+                  </Typography>
+                </div>
+                <div
+                  style={{
+                    backgroundColor: "#f5f5f5",
+                    padding: "5px",
+                  }}
+                >
+                  <Typography variant="body2" sx={{ mt: 6 }}>
+                    {selectedIndicator && selectedIndicator.responsibleResources && selectedIndicator.responsibleResources.length > 0
+                      ? selectedIndicator.responsibleResources.map(r => r.username || r).join(", ")
+                      : "_______________"}
+                  </Typography>
+                </div>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setModalViewOpen(false)}
+            color="primary"
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </React.Fragment>
   );
 }
