@@ -21,6 +21,7 @@ import { useGmailTabItemStyles } from "@mui-treasury/styles/tabs";
 import Button from "@material-ui/core/Button";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import ClearIcon from "@mui/icons-material/Clear";
 import Dialog from "@material-ui/core/Dialog";
 import DialogContent from "@material-ui/core/DialogContent";
 import DialogActions from "@material-ui/core/DialogActions";
@@ -61,20 +62,77 @@ function Row({
         setEvidencesFileIds(indicator.evidenceFileIds || []);
     };
 
+    const [viewingEvidence, setViewingEvidence] = useState(null);
+    const [evidenceBlobUrl, setEvidenceBlobUrl] = useState(null);
+
     const handleDownloadEvidence = async (attachedId, filename) => {
-        try {
-            const response = await axiosClient.get(`/file/download/${attachedId}`, {
-                responseType: "blob",
-            });
-            const blob = new Blob([response.data], { type: "application/pdf" });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = `${filename}.pdf`;
-            link.click();
-            URL.revokeObjectURL(link.href);
-        } catch (error) {
-            console.error(error);
+        console.log("handleDownloadEvidence called with:", attachedId, filename);
+        
+        // Debug: Check if we have valid IDs
+        if (!attachedId) {
+            console.error("No attachedId provided!");
+            alert("Error: No file ID found. Please refresh and try again.");
+            return;
         }
+        
+        // Check for token
+        const token = localStorage.getItem('ACCESS_TOKEN');
+        console.log("Token found:", token ? "yes" : "no");
+        
+        if (!token) {
+            alert("Authentication required. Please login again.");
+            return;
+        }
+
+        try {
+            console.log("Making API request to /file/download/", attachedId);
+            
+            // Use axiosClient with arraybuffer response type for direct access to binary data
+            const response = await axiosClient.get(`/file/download/${attachedId}`, {
+                responseType: "arraybuffer"
+            });
+
+            console.log("File download response status:", response.status);
+            
+            // Determine file type from filename
+            const fileExtension = filename ? filename.split('.').pop().toLowerCase() : '';
+            console.log("File extension:", fileExtension);
+            
+            // Create blob from arraybuffer for viewing
+            const blob = new Blob([response.data]);
+            const blobUrl = URL.createObjectURL(blob);
+            
+            console.log("Blob URL created:", blobUrl);
+            
+            // Store the blob/file URL and set viewing state to show in modal
+            // We don't need Uint8Array anymore - just use the blob URL for viewing
+            setEvidenceBlobUrl(blobUrl);
+            setViewingEvidence({ 
+                filename: filename || 'document', 
+                attachedId,
+                fileType: fileExtension
+            });
+            console.log("State updated - should show modal now");
+        } catch (error) {
+            console.error("Error downloading evidence:", error);
+            console.error("Error response:", error.response);
+            if (error.response?.status === 403) {
+                alert("You don't have permission to view this file. Please contact administrator.");
+            } else if (error.response?.status === 404) {
+                alert("File not found.");
+            } else {
+                alert("Failed to load evidence file. Please try again.");
+            }
+        }
+    };
+
+    const handleCloseEvidenceViewer = () => {
+        // Clean up the blob URL to free memory
+        if (evidenceBlobUrl) {
+            URL.revokeObjectURL(evidenceBlobUrl);
+        }
+        setViewingEvidence(null);
+        setEvidenceBlobUrl(null);
     };
 
     return (
@@ -210,6 +268,74 @@ function Row({
                     <Button onClick={() => setModalOpen(false)} color="primary">Close</Button>
                 </DialogActions>
             </Dialog>
+            
+            {/* Evidence Viewer Modal */}
+            {viewingEvidence && evidenceBlobUrl && (
+                <Dialog
+                    open={true}
+                    onClose={handleCloseEvidenceViewer}
+                    maxWidth="lg"
+                    fullWidth
+                >
+                    <DialogTitle>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span>{viewingEvidence.filename}</span>
+                            <IconButton onClick={handleCloseEvidenceViewer}>
+                                <ClearIcon />
+                            </IconButton>
+                        </div>
+                    </DialogTitle>
+                    <DialogContent>
+                        {viewingEvidence && evidenceBlobUrl ? (
+                            <Box sx={{ width: '100%', height: '70vh' }}>
+                                {/* For PDF files - use iframe */}
+                                {viewingEvidence.fileType === 'pdf' ? (
+                                    <iframe
+                                        src={evidenceBlobUrl}
+                                        style={{ width: '100%', height: '100%', border: 'none' }}
+                                        title="PDF Viewer"
+                                    />
+                                ) : viewingEvidence.fileType === 'docx' || viewingEvidence.fileType === 'doc' || viewingEvidence.fileType === 'xlsx' || viewingEvidence.fileType === 'xls' ? (
+                                    /* For Office documents - show download options */
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
+                                        <Typography variant="body1" gutterBottom>
+                                            {viewingEvidence.fileType === 'docx' || viewingEvidence.fileType === 'doc' 
+                                                ? "Word documents cannot be previewed directly." 
+                                                : "Excel spreadsheets cannot be previewed directly."}
+                                        </Typography>
+                                        <Button
+                                            variant="contained"
+                                            color="primary"
+                                            onClick={() => {
+                                                const link = document.createElement('a');
+                                                link.href = evidenceBlobUrl;
+                                                link.download = viewingEvidence.filename;
+                                                document.body.appendChild(link);
+                                                link.click();
+                                                document.body.removeChild(link);
+                                            }}
+                                            sx={{ mt: 2 }}
+                                        >
+                                            Download Document
+                                        </Button>
+                                    </Box>
+                                ) : (
+                                    /* For images - display directly */
+                                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+                                        <img
+                                            src={evidenceBlobUrl}
+                                            alt={viewingEvidence.filename}
+                                            style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+                                        />
+                                    </Box>
+                                )}
+                            </Box>
+                        ) : (
+                            <Typography>Unable to load file preview.</Typography>
+                        )}
+                    </DialogContent>
+                </Dialog>
+            )}
         </React.Fragment>
     );
 }
