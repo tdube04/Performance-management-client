@@ -100,6 +100,10 @@ export default function SummaryScores() {
   const [periodMismatch, setPeriodMismatch] = useState(false);
   const [confirmedQuarter, setConfirmedQuarter] = useState(null);
   const [dismissedConfirmation, setDismissedConfirmation] = useState(false);
+  
+  // Store appraiser and evaluator names
+  const [appraiserName, setAppraiserName] = useState("");
+  const [evaluatorName, setEvaluatorName] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -186,6 +190,20 @@ export default function SummaryScores() {
           console.log(response.data);
 
           setResponseBody(response.data);
+          
+          // Get appraiser name from the scorecard
+          const scorecardData = response.data.content && response.data.content[0];
+          if (scorecardData && scorecardData.appraiser) {
+            try {
+              const appraiserResponse = await axiosClient.get(`/User/{id}?id=${scorecardData.appraiser}`);
+              if (appraiserResponse.data) {
+                setAppraiserName(`${appraiserResponse.data.name || ''} ${appraiserResponse.data.surname || ''}`.trim());
+              }
+            } catch (e) {
+              console.log("Could not fetch appraiser name:", e);
+              setAppraiserName(scorecardData.appraiser);
+            }
+          }
           
           // Check if there's data for the current period
           if (
@@ -657,8 +675,11 @@ export default function SummaryScores() {
             </Typography>
 
             <Typography>
-              <b>Name of Appraisee :</b> {profileData && profileData.name} {""}{" "}
-              {profileData && profileData.surname}
+              <b>Name of Appraisee :</b> {(profileData && (profileData.name || profileData.surname)) 
+                ? `${profileData.name || ''} ${profileData.surname || ''}`.trim()
+                : (responseBody && responseBody.content && responseBody.content[0] && responseBody.content[0].user_email
+                  ? responseBody.content[0].user_email
+                  : "__________")}
             </Typography>
             {/* <Typography>
               <b>Signature:</b> T. Dube
@@ -671,9 +692,7 @@ export default function SummaryScores() {
           </div>
           <div>
             <Typography>
-              <b>Name of Appraiser :</b> {responseBody && responseBody.content && responseBody.content[0] && responseBody.content[0].evaluator_email 
-                ? responseBody.content[0].evaluator_email 
-                : "__________"}
+              <b>Name of Appraiser :</b> {appraiserName || (responseBody && responseBody.content && responseBody.content[0] && responseBody.content[0].appraiser) || "__________"}
             </Typography>
 
             {/* <Typography>

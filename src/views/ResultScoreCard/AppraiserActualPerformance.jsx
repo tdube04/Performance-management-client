@@ -212,96 +212,108 @@ const AppraiserActualPerfromance = () => {
   const [scoringKey, setScoringKey] = useState("");
 
   const handleInputKeyUp = () => {
-    const quarterlyTarget = selectedIndicatorData.quarterly_target;
-    const allowableVariance = selectedIndicatorData.allowable_variance;
-    const incrementalDecremental =
-      selectedIndicatorData.incremental_or_decremental;
-    const indicatorWeight = selectedIndicatorData.weight;
-    const actualPerformance = actual_perfomanceRef.current.value;
+    if (!selectedIndicatorData) return;
+    
+    const quarterlyTarget = parseFloat(selectedIndicatorData.quarterly_target) || 0;
+    const allowableVariance = parseFloat(selectedIndicatorData.allowable_variance) || 0;
+    const incrementalDecremental = selectedIndicatorData.incremental_or_decremental;
+    const indicatorWeight = parseFloat(selectedIndicatorData.weight) || 0;
+    const actualPerformanceInput = actual_perfomanceRef.current.value;
+    
+    if (actualPerformanceInput === "") {
+      setScore(0);
+      setAgreedWeightedScore(0);
+      setScoringKey("");
+      return;
+    }
+    
+    const actualPerformance = parseFloat(actualPerformanceInput);
+    
+    if (isNaN(actualPerformance)) {
+      setScore(0);
+      setAgreedWeightedScore(0);
+      setScoringKey("Invalid input");
+      return;
+    }
 
-    var aws = 0;
+    var newScore = 0;
+    var newAgreedWeightedScore = 0;
+    var newScoringKey = "";
 
     if (incrementalDecremental === "Incremental") {
-      if (actualPerformance === "") {
-        setScore(0);
-      } else if (actualPerformance === "0") {
-        setScore(1);
-        setAgreedWeightedScore((score * indicatorWeight) / 100);
-        setScoringKey("Nothing was accomplished");
-        setIncrementalOrDecremental("Incremental");
-      } else if (actualPerformance === quarterlyTarget.toString()) {
-        setScore(4);
-        setAgreedWeightedScore((score * indicatorWeight) / 100);
-        setScoringKey("Met all agreed set targets");
-        setIncrementalOrDecremental("Incremental");
+      if (actualPerformance === 0) {
+        newScore = 1;
+        newAgreedWeightedScore = (1 * indicatorWeight) / 100;
+        newScoringKey = "Nothing was accomplished";
+      } else if (actualPerformance === quarterlyTarget) {
+        newScore = 4;
+        newAgreedWeightedScore = (4 * indicatorWeight) / 100;
+        newScoringKey = "Met all agreed set targets";
       } else if (
         actualPerformance > quarterlyTarget &&
         actualPerformance <= quarterlyTarget + allowableVariance
       ) {
-        setScore(5);
-        setAgreedWeightedScore((score * indicatorWeight) / 100);
-        setScoringKey("Performance above set targets -  but within variance");
-        setIncrementalOrDecremental("Incremental");
+        newScore = 5;
+        newAgreedWeightedScore = (5 * indicatorWeight) / 100;
+        newScoringKey = "Performance above set targets -  but within variance";
       } else if (actualPerformance > quarterlyTarget + allowableVariance) {
-        setScore(6);
-        setAgreedWeightedScore((score * indicatorWeight) / 100);
-        setScoringKey("Clearly exceeds set targets - but beyond variance");
-        setIncrementalOrDecremental("Incremental");
+        newScore = 6;
+        newAgreedWeightedScore = (6 * indicatorWeight) / 100;
+        newScoringKey = "Clearly exceeds set targets - but beyond variance";
       } else if (
         actualPerformance < quarterlyTarget &&
         actualPerformance >= quarterlyTarget - allowableVariance
       ) {
-        setScore(3);
-        setAgreedWeightedScore((score * indicatorWeight) / 100);
-        setScoringKey("Performance below set targets - but within variance");
-        setIncrementalOrDecremental("Incremental");
+        newScore = 3;
+        newAgreedWeightedScore = (3 * indicatorWeight) / 100;
+        newScoringKey = "Performance below set targets - but within variance";
       } else if (actualPerformance < quarterlyTarget - allowableVariance) {
-        setScore(2);
-        setAgreedWeightedScore((score * indicatorWeight) / 100);
-        setScoringKey("Performance below set targets - but below variance");
-        setIncrementalOrDecremental("Incremental");
+        newScore = 2;
+        newAgreedWeightedScore = (2 * indicatorWeight) / 100;
+        newScoringKey = "Performance below set targets - but below variance";
       }
+      
+      setScore(newScore);
+      setAgreedWeightedScore(newAgreedWeightedScore);
+      setScoringKey(newScoringKey);
+      setIncrementalOrDecremental("Incremental");
     } else if (incrementalDecremental === "Decremental") {
-      if (actualPerformance === "") {
-        setScore(0);
-      } else if (actualPerformance > "100") {
-        setScore(1);
-        setAgreedWeightedScore((score * indicatorWeight) / 100);
-        setScoringKey("Nothing was accomplished");
-        setIncrementalOrDecremental("Decremental");
-      } else if (actualPerformance === quarterlyTarget.toString()) {
-        setScore(4);
-        setAgreedWeightedScore((score * indicatorWeight) / 100);
-        setScoringKey("Met all agreed set targets");
-        setIncrementalOrDecremental("Decremental");
+      if (actualPerformance === 0) {
+        newScore = 1;
+        newAgreedWeightedScore = (1 * indicatorWeight) / 100;
+        newScoringKey = "Nothing was accomplished";
+      } else if (actualPerformance === quarterlyTarget) {
+        newScore = 4;
+        newAgreedWeightedScore = (4 * indicatorWeight) / 100;
+        newScoringKey = "Met all agreed set targets";
       } else if (
         actualPerformance > quarterlyTarget &&
         actualPerformance <= quarterlyTarget + allowableVariance
       ) {
-        setScore(3);
-        setAgreedWeightedScore((score * indicatorWeight) / 100);
-        setScoringKey("Performance below set targets - but within variance");
-        setIncrementalOrDecremental("Decremental");
+        newScore = 3;
+        newAgreedWeightedScore = (3 * indicatorWeight) / 100;
+        newScoringKey = "Performance below set targets - but within variance";
       } else if (actualPerformance > quarterlyTarget + allowableVariance) {
-        setScore(2);
-        setAgreedWeightedScore((score * indicatorWeight) / 100);
-        setScoringKey("Performance below set targets - but below variance");
-        setIncrementalOrDecremental("Decremental");
+        newScore = 2;
+        newAgreedWeightedScore = (2 * indicatorWeight) / 100;
+        newScoringKey = "Performance below set targets - but below variance";
       } else if (
         actualPerformance < quarterlyTarget &&
         actualPerformance >= quarterlyTarget - allowableVariance
       ) {
-        setScore(5);
-        setAgreedWeightedScore((score * indicatorWeight) / 100);
-        setScoringKey("Performance above set targets -  but within variance");
-        setIncrementalOrDecremental("Decremental");
+        newScore = 5;
+        newAgreedWeightedScore = (5 * indicatorWeight) / 100;
+        newScoringKey = "Performance above set targets -  but within variance";
       } else if (actualPerformance < quarterlyTarget - allowableVariance) {
-        setScore(6);
-        setAgreedWeightedScore((score * indicatorWeight) / 100);
-        setScoringKey("Clearly exceeds set targets - but beyond variance");
-        setIncrementalOrDecremental("Decremental");
+        newScore = 6;
+        newAgreedWeightedScore = (6 * indicatorWeight) / 100;
+        newScoringKey = "Clearly exceeds set targets - but beyond variance";
       }
-      // aws = score*indicatorWeight;
+      
+      setScore(newScore);
+      setAgreedWeightedScore(newAgreedWeightedScore);
+      setScoringKey(newScoringKey);
+      setIncrementalOrDecremental("Decremental");
     }
   };
 

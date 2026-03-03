@@ -101,19 +101,19 @@ export const AppraiseeSidebarData = [
 
   { title: <hr style={{ width: "200px" }} /> },
 
-  {
-    title: (
-      <span style={{ color: "#A6990D" }}>
-        <strong>EVALUATOR VIEW</strong>
-      </span>
-    ),
-    path: "",
+  // {
+  //   title: (
+  //     <span style={{ color: "#A6990D" }}>
+  //       <strong>EVALUATOR VIEW</strong>
+  //     </span>
+  //   ),
+  //   path: "",
 
-    icon: <AiIcons.AiFillHome style={{ color: "#A6990D" }} />,
-    // iconClosed: <RiIcons.RiArrowDownSFill />,
-    // iconOpened: <RiIcons.RiArrowUpSFill />,
-    subNav: [],
-  },
+  //   icon: <AiIcons.AiFillHome style={{ color: "#A6990D" }} />,
+  //   // iconClosed: <RiIcons.RiArrowDownSFill />,
+  //   // iconOpened: <RiIcons.RiArrowUpSFill />,
+  //   subNav: [],
+  // },
   
   {
     title: "Submitted Result Scorecards",

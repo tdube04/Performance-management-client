@@ -198,66 +198,66 @@ export const AppraiserSidebarData = [
     ],
   },
 
-  {
-    title: "Evaluator View",
-    path: "",
-    icon: <FaIcons.FaEnvelopeOpenText />,
+  // {
+  //   title: "Evaluator View",
+  //   path: "",
+  //   icon: <FaIcons.FaEnvelopeOpenText />,
 
-    iconClosed: <RiIcons.RiArrowDownSFill />,
-    iconOpened: <RiIcons.RiArrowUpSFill />,
+  //   iconClosed: <RiIcons.RiArrowDownSFill />,
+  //   iconOpened: <RiIcons.RiArrowUpSFill />,
 
-    subNav: [
-      {
-        title: "Evaluate Result Scorecards",
-        path: "/appraisee-result-scorecard-pending-approval",
-        icon: <IoIcons.IoIosPaper />,
-        cName: "sub-nav",
-      },
-      {
-        title: "Evaluate Work Plans",
-        path: "/appraisee-result-scorecard-pending-approval",
-        icon: <IoIcons.IoIosPaper />,
-        cName: "sub-nav",
-      }
-    ],
-  },
-  {
-    title: (
-      <span style={{ color: "#A6990D" }}>
-        <strong>EVALUATOR VIEW</strong>
-      </span>
-    ),
-    path: "",
+  //   subNav: [
+  //     {
+  //       title: "Evaluate Result Scorecards",
+  //       path: "/appraisee-result-scorecard-pending-approval",
+  //       icon: <IoIcons.IoIosPaper />,
+  //       cName: "sub-nav",
+  //     },
+  //     {
+  //       title: "Evaluate Work Plans",
+  //       path: "/appraisee-result-scorecard-pending-approval",
+  //       icon: <IoIcons.IoIosPaper />,
+  //       cName: "sub-nav",
+  //     }
+  //   ],
+  // },
+  // {
+  //   title: (
+  //     <span style={{ color: "#A6990D" }}>
+  //       <strong>EVALUATOR VIEW</strong>
+  //     </span>
+  //   ),
+  //   path: "",
 
-    icon: <AiIcons.AiFillHome style={{ color: "#A6990D" }} />,
-    // iconClosed: <RiIcons.RiArrowDownSFill />,
-    // iconOpened: <RiIcons.RiArrowUpSFill />,
-    subNav: [
+  //   icon: <AiIcons.AiFillHome style={{ color: "#A6990D" }} />,
+  //   // iconClosed: <RiIcons.RiArrowDownSFill />,
+  //   // iconOpened: <RiIcons.RiArrowUpSFill />,
+  //   subNav: [
       
-    ],
-  },
-  {
-    title: "Evaluator View",
-    path: "",
-    icon: <FaIcons.FaEnvelopeOpenText />,
+  //   ],
+  // },
+  // {
+  //   title: "Evaluator View",
+  //   path: "",
+  //   icon: <FaIcons.FaEnvelopeOpenText />,
 
-    iconClosed: <RiIcons.RiArrowDownSFill />,
-    iconOpened: <RiIcons.RiArrowUpSFill />,
+  //   iconClosed: <RiIcons.RiArrowDownSFill />,
+  //   iconOpened: <RiIcons.RiArrowUpSFill />,
 
-    subNav: [
-      {
-        title: "Evaluate Result Scorecards",
-        path: "/approved-appraisee-results-scorecard-evalaluator-comment",
-        icon: <IoIcons.IoIosPaper />,
-        cName: "sub-nav",
-      },
-      {
-        title: "Evaluate Work Plans",
-        path: "/appraisee-result-scorecard-pending-approval",
-        icon: <IoIcons.IoIosPaper />,
-        cName: "sub-nav",
-      }
-    ],
-  },
+  //   subNav: [
+  //     {
+  //       title: "Evaluate Result Scorecards",
+  //       path: "/approved-appraisee-results-scorecard-evalaluator-comment",
+  //       icon: <IoIcons.IoIosPaper />,
+  //       cName: "sub-nav",
+  //     },
+  //     {
+  //       title: "Evaluate Work Plans",
+  //       path: "/appraisee-result-scorecard-pending-approval",
+  //       icon: <IoIcons.IoIosPaper />,
+  //       cName: "sub-nav",
+  //     }
+  //   ],
+  // },
   
 ];
