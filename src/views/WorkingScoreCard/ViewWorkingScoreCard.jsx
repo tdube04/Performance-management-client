@@ -104,6 +104,8 @@ function Row({ program, area, planStatus }) {
   const [isHovered, setIsHovered] = useState(false);
   const [message, setMessage] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [viewingEvidence, setViewingEvidence] = useState(null);
+  const [evidenceBlobUrl, setEvidenceBlobUrl] = useState(null);
   const classes = useStyles();
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
@@ -123,27 +125,94 @@ function Row({ program, area, planStatus }) {
   };
 
   const handleDownloadEvidence = async (attachedId, filename) => {
+    console.log("handleDownloadEvidence called with:", attachedId, filename);
+    
+    // Debug: Check if we have valid IDs
+    if (!attachedId) {
+      console.error("No attachedId provided!");
+      alert("Error: No file ID found. Please refresh and try again.");
+      return;
+    }
+    
+    // Check for token - axiosClient handles auth automatically
+    const token = localStorage.getItem('ACCESS_TOKEN');
+    console.log("Token found:", token ? "yes" : "no");
+    
+    if (!token) {
+      alert("Authentication required. Please login again.");
+      return;
+    }
+
     try {
+      console.log("Making API request to /file/download/", attachedId);
+      
+      // Use axiosClient - it already adds the Authorization header automatically
       const response = await axiosClient.get(`/file/download/${attachedId}`, {
-        responseType: "blob", // Set the response type to 'blob'
+        responseType: "blob"
       });
 
-      // Create a Blob object from the response data
+      console.log("File download response status:", response.status);
+      
+      // Determine file type from filename
+      const fileExtension = filename ? filename.split('.').pop().toLowerCase() : '';
+      console.log("File extension:", fileExtension);
+      
+      // For Word documents and other non-PDF files, download instead of viewing
+      if (fileExtension !== 'pdf') {
+        console.log("Non-PDF file - will download");
+        // Create a blob and trigger download
+        const blob = new Blob([response.data]);
+        const downloadUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = filename || 'evidence file';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(downloadUrl);
+        console.log("Download triggered for:", filename);
+        return;
+      }
+      
+      // For PDF files, create blob and view in modal
       const blob = new Blob([response.data], { type: "application/pdf" });
+      
+      console.log("Blob created, size:", blob.size);
 
-      // Create a temporary link element
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = `${filename}.pdf`; // Set the desired file name
+      if (blob.size === 0) {
+        alert("The file appears to be empty.");
+        return;
+      }
 
-      // Programmatically click the link to trigger the file download
-      link.click();
-
-      // Clean up the URL object after the download is initiated
-      URL.revokeObjectURL(link.href);
+      // Create a temporary URL for the blob
+      const blobUrl = URL.createObjectURL(blob);
+      
+      console.log("Blob URL created:", blobUrl);
+      
+      // Store the blob URL and set viewing state to show in modal
+      setEvidenceBlobUrl(blobUrl);
+      setViewingEvidence({ filename: filename || 'document.pdf', attachedId });
+      console.log("State updated - should show modal now");
     } catch (error) {
-      console.error(error);
+      console.error("Error downloading evidence:", error);
+      console.error("Error response:", error.response);
+      if (error.response?.status === 403) {
+        alert("You don't have permission to view this file. Please contact administrator.");
+      } else if (error.response?.status === 404) {
+        alert("File not found.");
+      } else {
+        alert("Failed to load evidence file. Please try again.");
+      }
     }
+  };
+
+  const handleCloseEvidenceViewer = () => {
+    // Clean up the blob URL to free memory
+    if (evidenceBlobUrl) {
+      URL.revokeObjectURL(evidenceBlobUrl);
+    }
+    setViewingEvidence(null);
+    setEvidenceBlobUrl(null);
   };
 
   const handleDeleteEvidence = (id) => {
@@ -884,6 +953,32 @@ function Row({ program, area, planStatus }) {
                       </Button>
                     </DialogActions>
                   </Dialog>
+                  
+                  {/* Evidence Viewer Modal */}
+                  {viewingEvidence && evidenceBlobUrl && (
+                    <Dialog
+                      open={true}
+                      onClose={handleCloseEvidenceViewer}
+                      maxWidth="lg"
+                      fullWidth
+                    >
+                      <DialogTitle>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span>{viewingEvidence.filename}</span>
+                          <IconButton onClick={handleCloseEvidenceViewer}>
+                            <ClearIcon />
+                          </IconButton>
+                        </div>
+                      </DialogTitle>
+                      <DialogContent>
+                        <iframe
+                          src={evidenceBlobUrl}
+                          style={{ width: '100%', height: '70vh', border: 'none' }}
+                          title="Evidence Viewer"
+                        />
+                      </DialogContent>
+                    </Dialog>
+                  )}
                 </TableBody>
               </Table>
             </Box>
