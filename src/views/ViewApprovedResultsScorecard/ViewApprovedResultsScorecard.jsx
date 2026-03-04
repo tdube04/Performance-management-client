@@ -453,16 +453,29 @@ export default function ViewApprovedResultsScorecard() {
       try {
         const urlParams = new URLSearchParams(window.location.search);
         const userName = urlParams.get("username");
-        const workplanParsed = urlParams.get("workplanData");
+        
+        // Check for both workplanData and scorecardData parameters
+        const workplanParsed = urlParams.get("workplanData") || urlParams.get("scorecardData");
+        
+        if (!workplanParsed) {
+          console.log("No workplan or scorecard data found in URL parameters");
+          return;
+        }
+        
         const decodedWorkplanData = JSON.parse(decodeURIComponent(workplanParsed));
         
-        setPerformanceAreas(decodedWorkplanData.areasOfPerformance);
-        setPlanStatus(decodedWorkplanData.scorecardStatus);
+        if (!decodedWorkplanData) {
+          console.log("No decoded data found");
+          return;
+        }
+        
+        setPerformanceAreas(decodedWorkplanData.areasOfPerformance || []);
+        setPlanStatus(decodedWorkplanData.scorecardStatus || decodedWorkplanData.workplanStatus || "");
         console.log(decodedWorkplanData);
-        setSelectedAppraisee(decodedWorkplanData.user_email);
-        setWorkpanIda(decodedWorkplanData.id);
+        setSelectedAppraisee(decodedWorkplanData.user_email || decodedWorkplanData.user_email);
+        setWorkpanIda(decodedWorkplanData.id || 0);
       } catch (error) {
-        console.error(error);
+        console.error("Error fetching data:", error);
       }
     };
   

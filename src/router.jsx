@@ -211,6 +211,10 @@ const router = createBrowserRouter([
         element: <ViewApprovedResultsScorecard />,
       },
       {
+        path: "/selected-repository-scorecard",
+        element: <ViewApprovedResultsScorecard />,
+      },
+      {
         path: "/evaluatorcomment-selected-approved-results-scorecard",
         element: <EvaluatorViewApprovedResultsScorecard />,
       },
@@ -361,6 +365,10 @@ const router = createBrowserRouter([
       },
       {
         path: "/board-dashboard/selected-approved-results-scorecard",
+        element: <ViewApprovedResultsScorecard />,
+      },
+      {
+        path: "/board-dashboard/selected-repository-scorecard",
         element: <ViewApprovedResultsScorecard />,
       },
       {

@@ -58,4 +58,26 @@ export const BoardSideBarData = [
       },
     ],
   },
+
+  {
+    title: "Repository",
+    path: "",
+    icon: <FaIcons.FaEnvelopeOpenText />,
+    iconClosed: <RiIcons.RiArrowDownSFill />,
+    iconOpened: <RiIcons.RiArrowUpSFill />,
+    subNav: [
+      {
+        title: "Previous Workplans",
+        path: "/board-dashboard/previousworkplans",
+        icon: <IoIcons.IoMdPeople />,
+        cName: "sub-nav",
+      },
+      {
+        title: "Previous Scorecards",
+        path: "/board-dashboard/previousscorecards",
+        icon: <FaIcons.FaEnvelopeOpenText />,
+        cName: "sub-nav",
+      },
+    ],
+  },
 ];

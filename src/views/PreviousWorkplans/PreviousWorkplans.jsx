@@ -82,35 +82,42 @@ const PreviousWorkplans = () => {
       const appraiseeWorkplanArray = [];
       const quarters = ["Q1", "Q2", "Q3", "Q4"];
       const currentYear = new Date().getFullYear();
-      const futureYears = [];
-      for (let year = 2023; year <= currentYear + 10; year++) {
-        futureYears.push(year);
+      
+      // Get past years (from 2020 to current year)
+      const years = [];
+      for (let year = 2020; year <= currentYear; year++) {
+        years.push(year);
       }
-      const periods = futureYears.flatMap((year) =>
+      
+      const periods = years.flatMap((year) =>
         quarters.map((quarter) => `${year}-${quarter}`)
       );
-      const statuses = [
-        "Approved",
-        "Incomplete",
-        "Rejected",
-        "pendingApproval",
-      ];
-     console.log(evaluationPeriod);
+      
+      console.log(evaluationPeriod);
 
-      for (const status of statuses) {
-        const response = await axiosClient.get(
-          "/workplan/searchWorkplanByAppraisee",
-          {
-            params: {
-              period: getCurrentEvaluationPeriod().evaluationPeriod,
-              planStatus: status,
-              User_email: userName,
-            },
+      // Fetch approved workplans for all past periods
+      for (const period of periods) {
+        try {
+          const response = await axiosClient.get(
+            "/workplan/searchWorkplanByAppraisee",
+            {
+              params: {
+                period: period,
+                planStatus: "Approved",
+                User_email: userName,  // Capital U and E to match backend expectation
+              },
+            }
+          );
+
+          if (response.data && response.data.content && response.data.content.length > 0) {
+            appraiseeWorkplanArray.push(...response.data.content);
+          } else if (response.data && !response.data.content && Object.keys(response.data).length > 0) {
+            // Handle case where response.data is the workplan object itself
+            appraiseeWorkplanArray.push(response.data);
           }
-        );
-
-        if (response.data && Object.keys(response.data).length !== 0) {
-          appraiseeWorkplanArray.push(response.data);
+        } catch (periodError) {
+          // Continue to next period if this one fails
+          console.log(`No workplan for period ${period}:`, periodError.message);
         }
       }
 
@@ -119,7 +126,8 @@ const PreviousWorkplans = () => {
 
       setWorkPlanData(appraiseeWorkplanArray);
     } catch (error) {
-      console.error(error);
+      console.error("Error fetching workplans:", error);
+      setWorkPlanData([]);
     }
   };
 
@@ -139,19 +147,39 @@ const PreviousWorkplans = () => {
       accessorKey: "appraiser_email",
       header: "Appraiser Email",
       filterVariant: "text",
-      size: 250,
+      size: 200,
     },
     {
       accessorKey: "evaluationPeriod",
       header: "Evaluation Period",
       filterVariant: "text",
-      size: 250,
+      size: 150,
     },
     {
       accessorKey: "workplanStatus",
       header: "Workplan Status",
       filterVariant: "text",
-      size: 250,
+      size: 150,
+    },
+    {
+      accessorKey: "dateSubmitted",
+      header: "Date Submitted",
+      Cell: ({ cell }) => {
+        const date = cell.getValue();
+        return date ? new Date(date).toLocaleDateString() : "__________";
+      },
+      filterVariant: "text",
+      size: 150,
+    },
+    {
+      accessorKey: "dateApproved",
+      header: "Date Approved",
+      Cell: ({ cell }) => {
+        const date = cell.getValue();
+        return date ? new Date(date).toLocaleDateString() : "__________";
+      },
+      filterVariant: "text",
+      size: 150,
     },
   ]);
 
