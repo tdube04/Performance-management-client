@@ -285,6 +285,8 @@ export default function IncompleteWorkPlan() {
   const [planStatus, setPlanStatus] = useState("");
   const [selectedAppraisee, setSelectedAppraisee] = useState("");
   const [workpanIda, setWorkpanIda] = useState(0);
+  const [decodedWorkplanData, setDecodedWorkplanData] = useState(null);
+  const [appraiserDesignation, setAppraiserDesignation] = useState("____________");
 
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -328,11 +330,25 @@ export default function IncompleteWorkPlan() {
 
       console.log(decodedWorkplanData);
 
+      setDecodedWorkplanData(decodedWorkplanData);
       setPerformanceAreas(decodedWorkplanData.areasOfPerformance);
       console.log(decodedWorkplanData.areasOfPerformance);
       setPlanStatus(decodedWorkplanData.workplanStatus);
       setSelectedAppraisee(decodedWorkplanData.user_email);
       setWorkpanIda(decodedWorkplanData.id);
+      
+      // Fetch appraiser's designation (positionName)
+      const appraiserEmail = decodedWorkplanData?.appraiser_email || decodedWorkplanData?.user_email;
+      if (appraiserEmail) {
+        try {
+          const userResponse = await axiosClient.get(`/User/${appraiserEmail}`);
+          if (userResponse.data && userResponse.data.positionName) {
+            setAppraiserDesignation(userResponse.data.positionName);
+          }
+        } catch (error) {
+          console.error("Error fetching user details:", error);
+        }
+      }
     } catch (error) {
       console.error(error);
     }
@@ -653,9 +669,9 @@ export default function IncompleteWorkPlan() {
                   Agreement - Evaluation of Outcomes
                 </Typography>
                 <Typography style={{}}>
-                  Current Evaluation Period : 01 July - 30 September 2024
+                  Current Evaluation Period : {decodedWorkplanData?.evaluationPeriod || "____________"}
                 </Typography>
-                <Typography>Name of Appraiser : _____________ </Typography>
+                <Typography>Name of Appraiser : {decodedWorkplanData?.appraiser_email || decodedWorkplanData?.user_email || "____________"} </Typography>
 
                 <div
                   style={{
@@ -663,7 +679,7 @@ export default function IncompleteWorkPlan() {
                     flexDirection: "row",
                   }}
                 >
-                  <Typography>Designation : _____________ </Typography>
+                  <Typography>Designation : {appraiserDesignation} </Typography>
 
                   {/* <div
                     className="btn-saveWorkPlan"

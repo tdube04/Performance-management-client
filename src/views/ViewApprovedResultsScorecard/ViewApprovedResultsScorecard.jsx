@@ -411,6 +411,8 @@ export default function ViewApprovedResultsScorecard() {
   const [totalWeightedScore, setTotalWeightedScore] = useState(0);
   const [totalProgramsWeight, setTotalProgramsWeight] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
+  const [decodedWorkplanData, setDecodedWorkplanData] = useState(null);
+  const [appraiserDesignation, setAppraiserDesignation] = useState("____________");
 
   const {
     userName,
@@ -469,7 +471,21 @@ export default function ViewApprovedResultsScorecard() {
           return;
         }
         
+        setDecodedWorkplanData(decodedWorkplanData);
         setPerformanceAreas(decodedWorkplanData.areasOfPerformance || []);
+        
+        // Fetch appraiser's designation (positionName)
+        const appraiserEmail = decodedWorkplanData?.appraiser || decodedWorkplanData?.user_email;
+        if (appraiserEmail) {
+          try {
+            const userResponse = await axiosClient.get(`/User/${appraiserEmail}`);
+            if (userResponse.data && userResponse.data.positionName) {
+              setAppraiserDesignation(userResponse.data.positionName);
+            }
+          } catch (error) {
+            console.error("Error fetching user details:", error);
+          }
+        }
         setPlanStatus(decodedWorkplanData.scorecardStatus || decodedWorkplanData.workplanStatus || "");
         console.log(decodedWorkplanData);
         setSelectedAppraisee(decodedWorkplanData.user_email || decodedWorkplanData.user_email);
@@ -872,9 +888,9 @@ export default function ViewApprovedResultsScorecard() {
                   Agreement - Evaluation of Outcomes
                 </Typography>
                 <Typography style={{}}>
-                  Current Evaluation Period : 01 July - 30 September 2024
+                  Current Evaluation Period : {decodedWorkplanData?.evaluationPeriod || "____________"}
                 </Typography>
-                <Typography>Name of Appraiser : _____________ </Typography>
+                <Typography>Name of Appraiser : {decodedWorkplanData?.appraiser || decodedWorkplanData?.user_email || "____________"} </Typography>
 
                 <div
                   style={{
@@ -882,7 +898,7 @@ export default function ViewApprovedResultsScorecard() {
                     flexDirection: "row",
                   }}
                 >
-                  <Typography>Designation : _____________ </Typography>
+                  <Typography>Designation : {appraiserDesignation} </Typography>
                   <div
                     className="btn-saveWorkPlan"
                     style={{
