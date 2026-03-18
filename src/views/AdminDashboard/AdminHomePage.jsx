@@ -315,7 +315,7 @@ export default function AdminHomePage() {
           p: 3, 
           mb: 3, 
           borderRadius: 3,
-          background: 'linear-gradient(135deg, #1a237e 0%, #3949ab 100%)',
+          background: 'linear-gradient(135deg, #2e7d32 0%, #2e7d32 100%)',
           color: 'white',
         }}
       >

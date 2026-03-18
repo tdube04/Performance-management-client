@@ -63,7 +63,7 @@ export default function Login() {
 
     setIsLoading(true);
     axiosClient
-      .post("/temp-login", payload)
+      .post("/login", payload)
       .then(async ({ data }) => {
         setToken(data.jwtToken);
         console.log("JWT Token:", data.jwtToken);

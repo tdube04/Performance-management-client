@@ -1983,18 +1983,19 @@ export default function ResultScoreCard() {
       )}
 
       <div style={{ position: "absolute", top: 60, right: 40 }}>
-        {planStatus === "Rejected" ? (
+        {(planStatus === "Rejected" || (planStatus === "ResultsScorecard" && username)) ? (
           <div style={{ marginLeft: 20, cursor: "pointer" }}>
             <Typography
               className=""
               onClick={() => setClickedComment(!clickedComment)}
             >
-              Rejection Comment <CommentIcon />{" "}
+              {planStatus === "Rejected" ? "Rejection Comment" : "Appraisee Comment"} <CommentIcon />{" "}
               <span style={{ color: "#309366" }}></span>
             </Typography>
           </div>
         ) : null}
       </div>
+
       {/* <div style={{ position: "absolute", top: 60, right: 40 }}>
         <select
           className="input2 animate__animated animate__bounceIn"
