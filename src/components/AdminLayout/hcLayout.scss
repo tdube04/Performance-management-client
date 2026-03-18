@@ -1,28 +1,28 @@
 /* HC Layout - Steve Jobs Inspired Design */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-/* Variables */
+/* Variables #2e7d32 */
 :root {
   --sidebar-width: 280px;
   --sidebar-collapsed-width: 80px;
-  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --glass-bg: rgba(255, 255, 255, 0.08);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --hover-bg: rgba(255, 255, 255, 0.12);
+  --primary-gradient: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+  --glass-bg: rgba(46, 125, 50, 0.08);
+  --glass-border: rgba(76, 175, 80, 0.2);
+  --hover-bg: rgba(46, 125, 50, 0.15);
   --text-primary: #ffffff;
   --text-secondary: rgba(255, 255, 255, 0.7);
-  --accent-color: #f093fb;
-  --success-color: #10b981;
+  --accent-color: #4caf50;
+  --success-color: #66bb6a;
   --warning-color: #f59e0b;
   --danger-color: #ef4444;
-  --sidebar-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --sidebar-shadow: 0 8px 32px rgba(46, 125, 50, 0.3);
   --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .hc-layout {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   min-height: 100vh;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  background: linear-gradient(135deg, #1a2e1a 0%, #162e16 50%, #0f3d0f 100%);
   color: var(--text-primary);
   overflow: hidden;
 }
@@ -133,8 +133,8 @@
         &:focus {
           outline: none;
           border-color: var(--accent-color);
-          background: rgba(255, 255, 255, 0.1);
-          box-shadow: 0 0 20px rgba(102, 126, 234, 0.2);
+          background: rgba(46, 125, 50, 0.1);
+          box-shadow: 0 0 20px rgba(46, 125, 50, 0.2);
         }
       }
 

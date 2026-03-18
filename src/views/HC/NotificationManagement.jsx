@@ -273,7 +273,7 @@ const NotificationManagement = () => {
       <Switch
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        color="primary"
+        color="success"
         size="small"
         className="visibility-switch"
       />
@@ -332,7 +332,7 @@ const NotificationManagement = () => {
       Cell: ({ row }) => (
         <Box className="visibility-chips">
           {row.original.visibleToAll && (
-            <Chip label="All" size="small" color="primary" className="visibility-chip" />
+            <Chip label="All" size="small" color="success" className="visibility-chip" />
           )}
           {row.original.visibleToAppraisees && (
             <Chip label="Appraisees" size="small" className="visibility-chip" />
@@ -459,7 +459,7 @@ const NotificationManagement = () => {
             <Tooltip title="Restore">
               <IconButton
                 size="small"
-                color="primary"
+                color="success"
                 onClick={() => handleRestore(row.original)}
                 className="action-btn restore-btn"
               >
@@ -739,7 +739,7 @@ const NotificationManagement = () => {
               <Box className="visibility-preview">
                 <Typography variant="subtitle2" className="visibility-label">Visible to:</Typography>
                 <Box className="visibility-tags">
-                  {selectedNotification.visibleToAll && <Chip label="All" size="small" color="primary" />}
+                  {selectedNotification.visibleToAll && <Chip label="All" size="small" color="success" />}
                   {selectedNotification.visibleToAppraisees && <Chip label="Appraisees" size="small" />}
                   {selectedNotification.visibleToAppraisers && <Chip label="Appraisers" size="small" />}
                   {selectedNotification.visibleToHC && <Chip label="HC" size="small" />}

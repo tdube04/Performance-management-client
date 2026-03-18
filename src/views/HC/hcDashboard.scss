@@ -14,7 +14,7 @@ $orange-color: #f2590c;
 $orange-light: #fff3e0;
 
 // Gradients
-$gradient-blue: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+$gradient-blue: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
 $gradient-green: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
 $gradient-red: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
 $gradient-purple: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -53,12 +53,13 @@ $gradient-orange: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
 
   // Header Styles
   .dashboard-header {
-    background: white;
+    background: linear-gradient(135deg, rgba(46, 125, 50, 0.95) 0%, rgba(76, 175, 80, 0.9) 100%);
     border-radius: 16px;
     padding: 24px 32px;
     margin-bottom: 24px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 20px rgba(46, 125, 50, 0.15);
+    border: 1px solid rgba(76, 175, 80, 0.3);
+    backdrop-filter: blur(10px);
 
     .header-content {
       display: flex;
@@ -75,12 +76,12 @@ $gradient-orange: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         gap: 12px;
         font-size: 1.75rem;
         font-weight: 700;
-        color: #1e293b;
+        color: #ffffff;
         margin: 0;
 
         .header-icon {
           font-size: 28px;
-          color: $primary-color;
+          color: #a5d6a7;
         }
       }
 
@@ -88,11 +89,11 @@ $gradient-orange: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         display: flex;
         align-items: center;
         gap: 8px;
-        color: #64748b;
+        color: #e8f5e9;
         margin-top: 4px;
 
         .subtitle-icon {
-          color: $success-color;
+          color: #a5d6a7;
         }
       }
     }
@@ -106,13 +107,14 @@ $gradient-orange: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         width: 44px;
         height: 44px;
         border-radius: 12px;
-        background: #f1f5f9;
-        color: #64748b;
+        background: rgba(255, 255, 255, 0.15);
+        color: #ffffff;
         transition: all 0.2s ease;
+        backdrop-filter: blur(5px);
 
         &:hover {
-          background: $primary-light;
-          color: $primary-color;
+          background: rgba(255, 255, 255, 0.25);
+          color: #ffffff;
           transform: translateY(-2px);
         }
       }
@@ -123,6 +125,7 @@ $gradient-orange: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         border-radius: 12px;
         font-weight: 600;
         margin-left: 8px;
+        border: 2px solid rgba(255, 255, 255, 0.5);
       }
     }
   }
@@ -154,7 +157,7 @@ $gradient-orange: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
       }
 
       &.gradient-blue::before {
-        background: linear-gradient(90deg, #667eea, #764ba2);
+        background: linear-gradient(90deg, #2e7d32, #4caf50);
       }
 
       &.gradient-green::before {

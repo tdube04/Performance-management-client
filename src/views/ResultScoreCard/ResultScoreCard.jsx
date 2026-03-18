@@ -1046,9 +1046,10 @@ export default function ResultScoreCard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axiosClient.get(`/User/${userName}`);
+        // Fetch profile data for the target user (not the logged-in user)
+        const response = await axiosClient.get(`/User/${targetUserName}`);
         setProfileData(response.data);
-        console.log("My Appraiser profile");
+        console.log("Target User profile for scorecard:");
         console.log(response.data);
       } catch (error) {
         setError(error.message);
@@ -1057,7 +1058,7 @@ export default function ResultScoreCard() {
     };
 
     fetchData();
-  }, [userName]);
+  }, [targetUserName]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -1070,17 +1071,34 @@ export default function ResultScoreCard() {
           console.log("Fetching scorecards for period:", periodToUse);
           console.log("Target username:", targetUserName);
           
-          // Fetch scorecards WITH period filter - let backend handle the filtering
-          const response = await axiosClient.get("/scorecard/searchScorecard", {
+          // First try with period filter
+          let response = await axiosClient.get("/scorecard/searchScorecard", {
             params: {
               username: targetUserName,
-              period: periodToUse,  // Pass period to backend for filtering
+              period: periodToUse,
               page: 0,
               size: 10,
             },
           });
-          console.log("Scorecard API Response:");
+          
+          console.log("Scorecard API Response with period:");
           console.log(response.data);
+
+          // If no results with period, try without period filter
+          if (!response.data?.content?.length && !Array.isArray(response.data) || 
+              (response.data?.content?.length === 0) || 
+              (Array.isArray(response.data) && response.data.length === 0)) {
+            console.log("No scorecard with period, trying without period filter...");
+            response = await axiosClient.get("/scorecard/searchScorecard", {
+              params: {
+                username: targetUserName,
+                page: 0,
+                size: 10,
+              },
+            });
+            console.log("Scorecard API Response without period:");
+            console.log(response.data);
+          }
 
           // Use response directly - backend already filtered by period
           const filteredScorecards = response.data;

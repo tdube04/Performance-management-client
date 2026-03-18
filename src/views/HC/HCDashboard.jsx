@@ -559,7 +559,7 @@ const HCDashboard = () => {
   if (loading) {
     return (
       <div className="hc-dashboard-container">
-        <LinearProgress color="primary" />
+        <LinearProgress color="success" />
         <Fade in={loading}>
           <Box className="loading-container">
             <Box className="loading-content">
@@ -606,7 +606,7 @@ const HCDashboard = () => {
                 </Badge>
               </IconButton>
             </Tooltip>
-            <Avatar className="user-avatar" sx={{ bgcolor: 'primary.main' }}>
+            <Avatar className="user-avatar" sx={{ bgcolor: '#2e7d32' }}>
               {userName?.charAt(0)?.toUpperCase() || 'H'}
             </Avatar>
           </Box>
@@ -768,7 +768,7 @@ const HCDashboard = () => {
                   <Typography variant="h6" className="chart-title">
                     <AiIcons.AiOutlinePieChart /> Submission Overview
                   </Typography>
-                  <Chip label="Real-time" color="primary" size="small" />
+                  <Chip label="Real-time" color="success" size="small" />
                 </Box>
                 <Box className="chart-body doughnut-chart">
                   <Doughnut data={submissionChartData} options={doughnutOptions} />
@@ -848,8 +848,8 @@ const HCDashboard = () => {
           value={activeTab}
           onChange={(e, v) => setActiveTab(v)}
           className="custom-tabs"
-          indicatorColor="primary"
-          textColor="primary"
+          indicatorColor="success"
+          textColor="success"
         >
           <Tab icon={<BiIcons.BiUser />} label="Users List" />
           <Tab icon={<MdIcons.MdStar />} label="Top Performers" />
@@ -993,7 +993,7 @@ const HCDashboard = () => {
                       } else if (scorecardStatus === 'WorkingScorecard') {
                         return <Chip label="Working Scorecard" color="warning" size="small" icon={<FaIcons.FaEdit />} />;
                       } else if (forwardedToHC) {
-                        return <Chip label="Forwarded to HC" color="primary" size="small" icon={<MdIcons.MdForward />} />;
+                        return <Chip label="Forwarded to HC" color="success" size="small" icon={<MdIcons.MdForward />} />;
                       } else if (submittedAfterQuarterEnd) {
                         return <Chip label="Late" color="warning" size="small" icon={<FaIcons.FaExclamationTriangle />} />;
                       } else if (hasSubmittedScorecard) {
@@ -1072,7 +1072,7 @@ const HCDashboard = () => {
                           <Typography variant="h4">#{index + 1}</Typography>
                         </Box>
                         <Box className="performer-info">
-                          <Avatar className="performer-avatar" sx={{ bgcolor: 'primary.main', width: 56, height: 56 }}>
+                          <Avatar className="performer-avatar" sx={{ bgcolor: '#2e7d32', width: 56, height: 56 }}>
                             {user.name?.charAt(0)}{user.surname?.charAt(0)}
                           </Avatar>
                           <Box>
@@ -1114,7 +1114,7 @@ const HCDashboard = () => {
                 </Typography>
                 <Chip 
                   label={`${forwardedScorecards.length} Scorecards`} 
-                  color="primary" 
+                  color="success" 
                   size="small" 
                 />
               </Box>
@@ -1331,7 +1331,7 @@ const HCDashboard = () => {
           {selectedUser && selectedUser.hasSubmittedScorecard && (
             <Button
               variant="contained"
-              color="primary"
+              color="success"
               startIcon={<FaIcons.FaFileAlt />}
               onClick={() => {
                 setModalOpen(false);
@@ -1353,7 +1353,7 @@ const ActivityList = ({ activityData }) => {
     <Box className="activity-list">
       {activityData.map((item, index) => (
         <Paper key={index} elevation={0} className="activity-item">
-          <Avatar className="activity-avatar" sx={{ bgcolor: 'primary.light' }}>
+          <Avatar className="activity-avatar" sx={{ bgcolor: '#4caf50' }}>
             {item.name?.charAt(0)}
           </Avatar>
           <Box className="activity-content">
