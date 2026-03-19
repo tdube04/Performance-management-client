@@ -65,6 +65,15 @@ export default function Login() {
     axiosClient
       .post("/login", payload)
       .then(async ({ data }) => {
+        // Check if user is not found in database (jwtToken is null)
+        if (!data.jwtToken) {
+          setIsLoading(false);
+          // User not found in database - redirect to signup page
+          const signupUrl = `/signup?userName=${encodeURIComponent(usernameRef.current.value)}`;
+          window.location.href = signupUrl;
+          return;
+        }
+
         setToken(data.jwtToken);
         console.log("JWT Token:", data.jwtToken);
         console.log("Login Response:", data);
@@ -136,20 +145,22 @@ export default function Login() {
         const response = err.response;
         if (response) {
           if (response.status === 500) {
-            setMessage("Server Error");
+            setMessage("Unable to connect to server. Please try again later.");
           } else if (response.status === 422) {
-            setMessage(response.data.message);
+            setMessage(response.data.message || "Invalid credentials. Please check your username and password.");
           } else if (response.status === 404) {
-            setMessage("Not Found");
+            setMessage("User not found. Please register first by clicking the link below.");
           } else if (response.status === 403) {
-            setMessage("Forbidden");
+            setMessage("Access denied. Please contact your administrator.");
+          } else if (response.status === 401) {
+            setMessage("Invalid username or password. Please try again.");
           } else if (response.status === 400) {
-            setMessage("Bad Request");
+            setMessage("Invalid request. Please provide valid credentials.");
           } else {
-            setMessage("An error occurred");
+            setMessage("An unexpected error occurred. Please try again.");
           }
         } else {
-          setMessage("Server Error");
+          setMessage("Unable to connect to server. Please check your internet connection.");
         }
       })
       .finally(() => {
@@ -162,75 +173,68 @@ export default function Login() {
   };
 
   return (
-    <>
-
-      <div className="login-signup-form animated fadeInDown">
-        <div><h3 className="project-title "><strong>PERFORMANCE EVALUATION SYSTEM</strong></h3></div>
-        <div className="form">
+    <div className="login-container">
+      <div className="login-wrapper">
+        <div className="login-brand-section">
+          <div className="brand-content">
+            <img src="public/images/zimra.png" alt="Logo" className="logo-image" />
+            <h3 className="project-title">PERFORMANCE EVALUATION SYSTEM</h3>
+            <p className="tagline">Zimbabwe Revenue Authority</p>
+          </div>
+        </div>
+        
+        <div className="login-form-section">
+          <div className="form-header">
+            <h1 className="title">Login</h1>
+            <p className="subtitle">Enter your credentials to access your account</p>
+          </div>
+          
           <form onSubmit={onSubmit}>
-            {/* <img src="public/images/zimra.png" alt="Logo" className="logo" /> */}
-            <div className="logo-container">
-              <img src="public/images/zimra.png" alt="Logo" className="logo" />
+            <div className="form-group">
+              <label>Username</label>
+              <input
+                className={`input-field ${message ? 'error' : ''}`}
+                ref={usernameRef}
+                type="text"
+                placeholder="Enter your username"
+                variant="outlined"
+                onClick={handleInputClick}
+              />
             </div>
-            <h1 className="title">Login into your account</h1>
-            {/* {message && (
-            <div className="alert">
-              <p>{message}</p>
+            
+            <div className="form-group">
+              <label>Password</label>
+              <input
+                className={`input-field ${message ? 'error' : ''}`}
+                ref={passwordRef}
+                type="password"
+                placeholder="Enter your password"
+                onClick={handleInputClick}
+              />
             </div>
-          )} */}
-            <label>Username: </label>
-            <input
-              className="input1"
-              ref={usernameRef}
-              type="text"
-              placeholder="Username"
-              variant="outlined"
-              onClick={handleInputClick}
-            />{" "}
-            <br />
-            <br />
-            <label>Password: </label>
-            <input
-              className="input2"
-              ref={passwordRef}
-              type="password"
-              placeholder="Password"
-              onClick={handleInputClick}
-            />
-            <br />
-            <br />
-            <div className="">
-              <button className="btn-login">
-                {isLoading ? (
-                  <div style={{ margin: "auto" }}>
-                    <CircularProgress color="success" />{" "}
-                  </div>
-                ) : (
-                  "Submit"
-                )}
-              </button>
-            </div>
-            {userData && (
-              <div>
-                <p>Welcome, {userData.sub}!</p>
-                <ul>
-                  {userData.ADMIN.map((permission, index) => (
-                    <li key={index}>{permission}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            <p className="message">
-              Admin Click to <Link to="/adminlogin">Login</Link>
-            </p>
+            
+            <button className="btn-login" disabled={isLoading}>
+              {isLoading ? (
+                <div className="loading-spinner">
+                  <CircularProgress color="inherit" size={24} />
+                </div>
+              ) : (
+                "Sign In"
+              )}
+            </button>
+            
             {message && (
-              <div className="alert alert-danger">
+              <div className="alert">
                 <p>{message}</p>
               </div>
             )}
+            
+            <p className="message">
+              Admin? <Link to="/adminlogin">Click here to login</Link>
+            </p>
           </form>
         </div>
       </div>
-    </>
+    </div>
   );
 }

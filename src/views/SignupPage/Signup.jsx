@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import Typography from "@mui/material/Typography";
 import "./signup.scss";
 import "animate.css/animate.min.css";
 import jwt_decode from "jwt-decode";
@@ -10,9 +9,6 @@ import axios from "axios";
 import { useStateContext } from "../../context/ContextProvider";
 import { Navigate } from "react-router-dom";
 import axiosClient from "../../authentication/axios-client";
-import Select, { selectClasses } from "@mui/joy/Select";
-import Option from "@mui/joy/Option";
-import KeyboardArrowDown from "@mui/icons-material/KeyboardArrowDown";
 import cookie from "cookie";
 import { useLocation } from "react-router-dom";
 import queryString from "query-string";
@@ -69,19 +65,6 @@ export default function Signup() {
     console.log(password);
   }, []);
 
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       const response = await axiosClient.get("/division/allDivisions");
-  //       setDivisions(response.data);
-  //     } catch (error) {
-  //       console.log(error);
-  //     }
-  //   };
-
-  //   fetchData();
-  // }, []);
-
   const handleDivisionChange = (event) => {
     setSelectedDivision(event.target.value);
     setSelectedSection("");
@@ -110,30 +93,18 @@ export default function Signup() {
       }, 2000);
     }
     const formData = {
-      // name: firstNameRef.current.value,
-      // surname:lastNameRef.current.value,
-      // email: emailRef.current.value,
-      // ec_number: ecNumberRef.current.value,
-      // username: userNameRef.current.value,
-      // positionName: positionRef.current.value,
-      // divisionName:selectedDivision,
-      // sectionName:selectedSection,
-      // grade: gradeSelected,   
-
-        appraiserEmail: "string",
-        // appraiser_status: "UnAssigned",
-        divisionName: "",
-        ec_number: ecNumberRef.current.value,
-        email: emailRef.current.value,
-        enabled: true,
-        grade: gradeSelected,
-        name: firstNameRef.current.value,
-        positionName: "",
-        sectionName: "",
-        surname:lastNameRef.current.value,
-        userRole: "USER",
-        username: userNameRef.current.value
-     
+      appraiserEmail: "string",
+      divisionName: "",
+      ec_number: ecNumberRef.current.value,
+      email: emailRef.current.value,
+      enabled: true,
+      grade: gradeSelected,
+      name: firstNameRef.current.value,
+      positionName: "",
+      sectionName: "",
+      surname:lastNameRef.current.value,
+      userRole: "USER",
+      username: userNameRef.current.value
     };
 
     if (/^[^\s@]+@[zimra]+\.[co]+\.[zw]+$/.test(emailRef.current.value)) {
@@ -143,44 +114,6 @@ export default function Signup() {
         "Email is invalid or does not belong to the @zimra.co.zw domain"
       );
     }
-    // if (!firstNameRef.current.value) {
-    //   setMessage("First Name is required");
-    //   return;
-    // }
-
-    // if (!lastNameRef.current.value) {
-    //   setMessage("Last Name is required");
-    //   return;
-    // }
-    // if (!userNameRef.current.value) {
-    //   setMessage("User name is required");
-    //   return;
-    // }
-
-    // if (!emailRef.current.value) {
-    //   setMessage("Email is required");
-    //   return;
-    // }
-    // if (!ecNumberRef.current.value) {
-    //   setMessage(" Ec Number is required");
-    //   return;
-    // }
-    // if (!positionRef.current.value) {
-    //   setMessage("Position is required");
-    //   return;
-    // }
-    // if (!selectedDivision) {
-    //   setMessage("Division is required");
-    //   return;
-    // }
-    // if (!selectedSection) {
-    //   setMessage("Section is required");
-    //   return;
-    // }
-    // if (!gradeSelected) {
-    //   setMessage("Grade is required");
-    //   return;
-    // }
 
     try {
       const response = await axios
@@ -220,11 +153,7 @@ export default function Signup() {
       setIsLoading(false);
     }
   };
-  // const handleDivisionChange = (event) => {
-  //   if (event && event.target) {
-  //     setSectionNames(event.target.value);
-  //   }
-  // };
+
   const handleEmailChange = () => {
     const emailValue = emailRef.current.value;
     const atIndex = emailValue.indexOf("@");
@@ -242,244 +171,144 @@ export default function Signup() {
   const handleNavigeteLogin = () => {
     <Navigate to="/login" />;
     window.location.href = "/login";
-    // setToken(null);
-    //       localStorage.removeItem(token);
-    //       localStorage.clear();
   };
 
   return (
-    <div className="login-signup-form animated fadeInDown">
-      <div className="form">
-        <form onSubmit={onSubmit}>
-          <h1 className="title">Sign Up</h1>
-          <Typography className="" sx={{ ml: 10 }}>
-            Register on ZIMRA Perfomance Evaluation System
-          </Typography>
-
-          <div style={{ marginBottom: "5px" }}>
-            <label>First Name: </label>
-            <input
-              className="input1"
-              type="text"
-              placeholder="First Name"
-              variant="outlined"
-              onClick={handleInputClick}
-              ref={firstNameRef}
-            />
+    <div className="signup-container">
+      <div className="signup-wrapper">
+        <div className="signup-brand-section">
+          <div className="brand-content">
+            <img src="public/images/zimra.png" alt="Logo" className="logo-image" />
+            <h3 className="project-title">PERFORMANCE EVALUATION SYSTEM</h3>
+            <p className="tagline">Zimbabwe Revenue Authority</p>
           </div>
-          <div style={{ marginBottom: "5px" }}>
-            <label>Last Name: </label>
-            <input
-              className="input1"
-              type="text"
-              placeholder="Last Name"
-              variant="outlined"
-              onClick={handleInputClick}
-              ref={lastNameRef}
-            />
+        </div>
+        
+        <div className="signup-form-section">
+          <div className="form-header">
+            <h1 className="title">Create Account</h1>
+            <p className="subtitle">Register on ZIMRA Performance Evaluation System</p>
           </div>
-          <div style={{ marginBottom: "5px" }}>
-            <label>Email: </label>
-            <input
-              className="input2"
-              type="email"
-              placeholder="email@zimra.co.zw"
-              onClick={handleInputClick}
-              onChange={handleEmailChange}
-              ref={emailRef}
-            />
-          </div>
-          <div style={{ marginBottom: "5px" }}>
-            <label>EC Number: </label>
-            <input
-              className="input2"
-              type="number"
-              placeholder="EC Number"
-              onClick={handleInputClick}
-              ref={ecNumberRef}
-            />
-          </div>
-          <div style={{ marginBottom: "5px" }}>
-            <label>User Name: </label>
-            <input
-              defaultValue={userName}
-              className="input2"
-              type="text"
-              placeholder="User Name"
-              onClick={handleInputClick}
-              ref={userNameRef}
-            />
-          </div>
-          <div style={{ marginBottom: "5px" }}>
-            <label>Position: </label>
-            <input
-              className="input2"
-              type="text"
-              placeholder="Position"
-              onClick={handleInputClick}
-              ref={positionRef}
-            />
-          </div>
-       
-          {/* <div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                marginBottom: "5px",
-              }}
-            >
-              <label style={{ marginRight: "10px" }}>Division:</label>
+          
+          <form onSubmit={onSubmit}>
+            <div className="form-row">
+              <div className="form-group">
+                <label>First Name</label>
+                <input
+                  className="input-field"
+                  type="text"
+                  placeholder="First Name"
+                  variant="outlined"
+                  onClick={handleInputClick}
+                  ref={firstNameRef}
+                />
+              </div>
+              <div className="form-group">
+                <label>Last Name</label>
+                <input
+                  className="input-field"
+                  type="text"
+                  placeholder="Last Name"
+                  variant="outlined"
+                  onClick={handleInputClick}
+                  ref={lastNameRef}
+                />
+              </div>
+            </div>
+            
+            <div className="form-group">
+              <label>Email</label>
+              <input
+                className="input-field"
+                type="email"
+                placeholder="email@zimra.co.zw"
+                onClick={handleInputClick}
+                onChange={handleEmailChange}
+                ref={emailRef}
+              />
+            </div>
+            
+            <div className="form-row">
+              <div className="form-group">
+                <label>EC Number</label>
+                <input
+                  className="input-field"
+                  type="number"
+                  placeholder="EC Number"
+                  onClick={handleInputClick}
+                  ref={ecNumberRef}
+                />
+              </div>
+              <div className="form-group">
+                <label>User Name</label>
+                <input
+                  defaultValue={userName}
+                  className="input-field"
+                  type="text"
+                  placeholder="User Name"
+                  onClick={handleInputClick}
+                  ref={userNameRef}
+                />
+              </div>
+            </div>
+            
+            <div className="form-group">
+              <label>Position</label>
+              <input
+                className="input-field"
+                type="text"
+                placeholder="Position"
+                onClick={handleInputClick}
+                ref={positionRef}
+              />
+            </div>
+            
+            <div className="form-group">
+              <label>Grade</label>
               <select
-                className="input2"
-                value={selectedDivision}
-                onChange={handleDivisionChange}
-                placeholder="Select a division…"
-                style={{
-                  marginLeft: "80px",
-                  width: 247,
-                  backgroundColor: "#f9f6f6",
-                }}
+                className="input-field"
+                onChange={handleGradeChange}
+                placeholder="Select a grade…"
+                value={gradeSelected}
               >
-                <option value="">Select a division...</option>
-                {divisions &&
-                  divisions.map((division) => (
-                    <option
-                      key={division.divisionName}
-                      value={division.divisionName}
-                    >
-                      {division.divisionName}
-                    </option>
-                  ))}
+                <option value="">Select a grade…</option>
+                <option key="1" value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+                <option value="11">11</option>
+                <option value="12">12</option>
+                <option value="13">13</option>
+                <option value="14">14</option>
+                <option value="15">15</option>
+                <option value="16">16</option>
               </select>
             </div>
-            {selectedDivisionData && (
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  marginBottom: "5px",
-                }}
-              >
-                <label style={{ marginRight: "10px" }}>Section:</label>
-                <select
-                  className="input2"
-                  value={selectedSection}
-                  onChange={handleSectionChange}
-                  placeholder="Select a section…"
-                  style={{
-                    marginLeft: "80px",
-                    width: 247,
-                    backgroundColor: "#f9f6f6",
-                  }}
-                >
-                  <option value="">Select a section...</option>
-                  {selectedDivisionData &&
-                    selectedDivisionData.sectionName.map((sectionName) => (
-                      <option key={sectionName} value={sectionName}>
-                        {sectionName}
-                      </option>
-                    ))}
-                </select>
-              </div>
-            )}
-          </div> */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              marginBottom: "5px",
-            }}
-          >
-            <label style={{ marginRight: "10px" }}>Grade: </label>
-            <select
-              className="input2"
-              onChange={handleGradeChange}
-              placeholder="Select a grade…"
-              value={gradeSelected}
-              indicator={<KeyboardArrowDown />}
-              style={{
-                marginLeft: "80px",
-                width: 247,
-                backgroundColor: "#f9f6f6",
-                [`& .${selectClasses.indicator}`]: {
-                  transition: "0.2s",
-                  [`&.${selectClasses.expanded}`]: {
-                    transform: "rotate(-180deg)",
-                  },
-                },
-              }}
-            >
-              <option>Select a grade…</option>
-              <option key="1" value="1">
-                1
-              </option>
-              <option value="2">2</option>
-              <option value="3">3</option>
-              <option value="4">4</option>
-              <option value="5">5</option>
-              <option value="6">6</option>
-              <option value="7">7</option>
-              <option value="8">8</option>
-              <option value="9">9</option>
-              <option value="10">10</option>
-              <option value="11">11</option>
-              <option value="12">12</option>
-              <option value="13">13</option>
-              <option value="14">14</option>
-              <option value="15">15</option>
-              <option value="16">16</option>
-            </select>
-            {/* <input
-              className="input2"
-              type="text"
-              placeholder="Grade"
-              ref={gradeRef}
-              onClick={handleInputClick}
-            /> */}
-          </div>
-          <div className="">
-            <button className="btn-login">
+            
+            <button className="btn-submit" disabled={isLoading}>
               {isLoading ? (
-                <div style={{ margin: "auto" }}>
-                  <CircularProgress color="success" />{" "}
-                </div>
+                <CircularProgress color="inherit" size={24} />
               ) : (
-                "Submit"
+                "Create Account"
               )}
             </button>
-          </div>
-
-          {userData && (
-            <div>
-              <p>Welcome, {userData.sub}!</p>
-              <ul>
-                {userData.ADMIN.map((permission, index) => (
-                  <li key={index}>{permission}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {message && (
-            <div className="alert alert-danger">
-              <p>{message}</p>
-            </div>
-          )}
-        </form>
-        <div style={{ marginRight: "160px" }}>
-          <Typography
-            onClick={handleNavigeteLogin}
-            sx={{
-              ml: 55,
-              "&:hover": {
-                color: "green",
-                cursor: "pointer",
-              },
-            }}
-          >
-            Cancel
-          </Typography>
+            
+            {message && (
+              <div className="alert">
+                <p>{message}</p>
+              </div>
+            )}
+            
+            <span className="cancel-link" onClick={handleNavigeteLogin}>
+              Already have an account? Sign In
+            </span>
+          </form>
         </div>
       </div>
     </div>
