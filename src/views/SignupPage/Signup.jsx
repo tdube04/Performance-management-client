@@ -99,11 +99,12 @@ export default function Signup() {
       email: emailRef.current.value,
       enabled: true,
       grade: gradeSelected,
+      logAs: "user",
       name: firstNameRef.current.value,
       positionName: "",
       sectionName: "",
-      surname:lastNameRef.current.value,
-      userRole: "USER",
+      surname: lastNameRef.current.value,
+      userRole: ["USER"],
       username: userNameRef.current.value
     };
 
@@ -117,7 +118,7 @@ export default function Signup() {
 
     try {
       const response = await axios
-        .post("http://localhost:8080/saveUser", formData, {
+        .post("http://10.18.6.189:8080/saveUser", formData, {
           headers: {
             Authorization: tokenb,
           },
@@ -125,10 +126,22 @@ export default function Signup() {
         .then((response) => {
           if (response.status === 200) {
             Swal.fire({
-              title: "Success!",
-              text: "Successfully logged!!",
-              icon: "success",
-              timer: 2000,
+              title: 'Welcome to ZIMRA!',
+              text: 'Your account has been created successfully. Please login to continue.',
+              icon: 'success',
+              confirmButtonColor: '#2e7d32',
+              background: '#f5f7fa',
+              showClass: {
+                popup: 'animate__animated animate__fadeInDown'
+              },
+              hideClass: {
+                popup: 'animate__animated animate__fadeOutUp'
+              },
+              timer: 4500,
+              timerProgressBar: true,
+            }).then(() => {
+              // Redirect to login page after success
+              window.location.href = '/login';
             });
 
             setToken(tokenb);
