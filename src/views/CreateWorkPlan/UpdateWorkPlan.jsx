@@ -811,14 +811,7 @@ const UpdateWorkPlan = () => {
           </Typography>
         </div>
       </div>
-      <div style={{ position: "absolute", top: 60, right: 20 }}>
-        <ArticleIcon
-          sx={{
-            color: "#309366",
-          }}
-        />{" "}
-        INSTRUCTIONS
-      </div>
+    
       <div
         style={{
           display: "flex",

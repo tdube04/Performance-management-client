@@ -11,6 +11,7 @@ import Swal from "sweetalert2";
 import { Navigate } from "react-router-dom";
 import cookie from "cookie";
 import Cookies from "js-cookie";
+import RoleSelection from "./RoleSelection.jsx";
 
 export default function Login() {
   const usernameRef = useRef();
@@ -30,6 +31,9 @@ export default function Login() {
   const [decodedToken, setDecodedToken] = useState(null);
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [showRoleSelection, setShowRoleSelection] = useState(false);
+  const [userRoles, setUserRoles] = useState([]);
+  const [selectedUsername, setSelectedUsername] = useState("");
 
   const timer = useRef();
 
@@ -65,8 +69,8 @@ export default function Login() {
     axiosClient
       .post("/login", payload)
       .then(async ({ data }) => {
-        // Check if user is not found in database (jwtToken is null)
-        if (!data.jwtToken) {
+        // Check if user is not found in database (userFound is false)
+        if (data.userFound === false) {
           setIsLoading(false);
           // User not found in database - redirect to signup page
           const signupUrl = `/signup?userName=${encodeURIComponent(usernameRef.current.value)}`;
@@ -74,6 +78,25 @@ export default function Login() {
           return;
         }
 
+        // Check if authentication failed (userFound is true but jwtToken is null)
+        if (!data.jwtToken && data.userFound === true) {
+          setIsLoading(false);
+          setMessage("Invalid username or password. Please try again.");
+          return;
+        }
+
+        // Check if user has multiple roles - show role selection
+        if (data.userRole && data.userRole.length > 1) {
+          setIsLoading(false);
+          setUserRoles(data.userRole);
+          // Decode token to get username
+          const decoded = jwt_decode(data.jwtToken);
+          setSelectedUsername(decoded.sub);
+          setShowRoleSelection(true);
+          return;
+        }
+
+        // Single role user - proceed with normal login flow
         setToken(data.jwtToken);
         console.log("JWT Token:", data.jwtToken);
         console.log("Login Response:", data);
@@ -135,7 +158,11 @@ export default function Login() {
             setToken(null);
             localStorage.removeItem(token);
             localStorage.clear();
+            return;
           }
+
+          // Default redirect for regular users
+          window.location.href = "/dashboard";
         } catch (error) {
           console.error("Error fetching user profile:", error);
           // If user profile doesn't exist yet, they'll be redirected on the next page
@@ -174,6 +201,14 @@ export default function Login() {
 
   return (
     <div className="login-container">
+      {showRoleSelection && (
+        <RoleSelection 
+          userName={selectedUsername}
+          token={token}
+          userRoles={userRoles}
+          onRoleSelected={() => setShowRoleSelection(false)}
+        />
+      )}
       <div className="login-wrapper">
         <div className="login-brand-section">
           <div className="brand-content">

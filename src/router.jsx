@@ -83,7 +83,7 @@ const router = createBrowserRouter([
 
       {
         path: "/dashboard",
-        element: <AppraiseeDashboard />,
+        element: <SummaryScores />,
       },
       {
         path: "/completed",

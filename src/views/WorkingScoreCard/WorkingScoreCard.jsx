@@ -692,14 +692,14 @@ const WorkingScoreCard = () => {
         </Typography>
       </Paper>
 
-      <div style={{ position: "absolute", top: 60, right: 20 }}>
+      {/* <div style={{ position: "absolute", top: 60, right: 20 }}>
         <ArticleIcon
           sx={{
             color: "#309366",
           }}
         />{" "}
         INSTRUCTIONS
-      </div>
+      </div> */}
       <div
         style={{
           display: "flex",

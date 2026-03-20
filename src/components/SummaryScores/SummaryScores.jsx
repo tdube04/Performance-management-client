@@ -119,7 +119,7 @@ export default function SummaryScores() {
     };
 
     fetchData();
-  }, [userName, profileData]);
+  }, [userName]);
 
   // Fetch current open quarter from backend
   useEffect(() => {
@@ -144,10 +144,7 @@ export default function SummaryScores() {
 
   useEffect(() => {
     console.log(profileData);
-    if (profileData && profileData.appraiserEmail) {
-      const responseAppraiser = axiosClient.get(`/searchUser?name=tdube1`);
-      console.log(responseAppraiser.data);
-    }
+    // This effect logs profile data changes - no additional API calls needed here
   }, [profileData]);
 
   // useEffect(() => {
@@ -421,7 +418,7 @@ export default function SummaryScores() {
               </Typography>
             </div>
           </div>
-          <div style={{ position: "absolute", top: 60, right: 20 }}>
+          {/* <div style={{ position: "absolute", top: 60, right: 20 }}>
             <ArticleIcon
               sx={{
                 color: "#309366",
@@ -432,19 +429,8 @@ export default function SummaryScores() {
                 },
               }}
             />{" "}
-            <span
-              style={{
-                display: "inline-block",
-                verticalAlign: "middle",
-                transition: "transform 0.1s",
-                "&:hover": {
-                  transform: "scale(1.1)",
-                },
-              }}
-            >
-              INSTRUCTIONS
-            </span>
-          </div>
+    
+          </div> */}
           <FormControl
             style={{
               //   boxShadow: "0 0 10px rgba(0, 0, 0, 0.3)",
