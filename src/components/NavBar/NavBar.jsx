@@ -70,16 +70,21 @@ const NavBar = () => {
     // Check userType from context
     if (userType?.toUpperCase() === "ADMIN") return "admin";
     if (userType?.toUpperCase() === "HC") return "hc";
+    if (userType?.toUpperCase() === "BOARD") return "board";
     
     // Check userRole array from profile
     if (profileData?.userRole) {
       const roles = profileData.userRole.map(r => r.toLowerCase());
       if (roles.includes("hc")) return "hc";
       if (roles.includes("admin")) return "admin";
+      if (roles.includes("board")) return "board";
     }
     
     // Check if user is an appraiser (has appraisees)
     if (profileData?.appraisees && profileData.appraisees.length > 0) return "appraiser";
+    
+    // Check if user is a board member (grade 0)
+    if (profileData?.grade === "0") return "board";
     
     // Default to appraisee
     return "appraisee";

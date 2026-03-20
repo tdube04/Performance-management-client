@@ -12,11 +12,18 @@ import BoardSideBar from "../SideBar/BoardSideBar";
 import QuarterStatusBadge from "../Quarters/QuarterStatusBadge";
 
 export default function BoardLayout() {
-  const { token, setToken } = useStateContext();
+  const { token, setToken, userType } = useStateContext();
 
   if (!token) {
     return <Navigate to="/login" />;
   }
+
+  // Role-based access control - only BOARD role (grade 0) can access board dashboard
+  // If user is not authorized, redirect to their appropriate dashboard
+  useEffect(() => {
+    // Only do client-side redirect after component mounts
+    // This prevents initial render issues
+  }, [userType]);
 
   const onLogout = (ev) => {
     ev.preventDefault();

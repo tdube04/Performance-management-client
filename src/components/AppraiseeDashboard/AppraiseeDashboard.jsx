@@ -11,6 +11,7 @@ import QuarterStatusBadge from "../Quarters/QuarterStatusBadge";
 export default function AppraiseeDashboard() {
   const [performanceAreas, setPerformanceAreas] = useState([]);
   const [profileData, setProfileData] = useState("");
+  const [userGrade, setUserGrade] = useState(null);
 
   const {
     userName,
@@ -20,6 +21,32 @@ export default function AppraiseeDashboard() {
     setToken,
     setUserType,
   } = useStateContext();
+
+  // Role-based access control - only USER role should access this dashboard
+  useEffect(() => {
+    // Check if user is logged in
+    if (!token) {
+      window.location.href = "/login";
+      return;
+    }
+
+    // If user is logged in as ADMIN, redirect to admin dashboard
+    if (userType === "ADMIN") {
+      window.location.href = "/admin/dashboard";
+      return;
+    }
+    // If user is logged in as HC, redirect to HC dashboard
+    if (userType === "HC") {
+      window.location.href = "/hc/dashboard";
+      return;
+    }
+    // If user is logged in as BOARD, redirect to Board dashboard
+    // NOTE: Board users should typically log in with board role, but we handle it here too
+    if (userType === "BOARD") {
+      window.location.href = "/board-dashboard/dashboard";
+      return;
+    }
+  }, [userType, token]);
 
   useEffect(() => {
     async function fetchData() {

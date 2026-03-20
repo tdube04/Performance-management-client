@@ -25,6 +25,12 @@ export default function RoleSelection({ userName, token, userRoles, onRoleSelect
       title: "Human Capital",
       description: "Access HC dashboard and manage HR functions",
     },
+    BOARD: {
+      icon: "🏛️",
+      color: "#8b5cf6",
+      title: "Board Member",
+      description: "Access board dashboard and executive reviews",
+    },
     USER: {
       icon: "👤",
       color: "#6366f1",
@@ -59,6 +65,10 @@ export default function RoleSelection({ userName, token, userRoles, onRoleSelect
         } else if (newLogAs === "hc") {
           setUserType("HC");
           window.location.href = "/hc/dashboard";
+        } else if (newLogAs === "board") {
+          // Board member - redirect to board dashboard
+          setUserType("BOARD");
+          window.location.href = "/board-dashboard/dashboard";
         } else {
           setUserType("USER");
           window.location.href = "/dashboard";

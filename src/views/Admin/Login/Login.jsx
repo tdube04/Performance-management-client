@@ -116,6 +116,9 @@ export default function Login() {
         } else if (userRole === "hc") {
           setUserType("HC");
           console.log("User logged in as HUMAN CAPITAL");
+        } else if (userRole === "board") {
+          setUserType("BOARD");
+          console.log("User logged in as BOARD");
         } else {
           setUserType("USER");
           console.log("User logged in as USER");
@@ -140,6 +143,13 @@ export default function Login() {
           if (userRole === "hc") {
             console.log("HC user detected, redirecting to HC dashboard");
             window.location.href = "/hc/dashboard";
+            return;
+          }
+
+          // Redirect Board members to Board dashboard
+          if (userRole === "board") {
+            console.log("Board member detected, redirecting to Board dashboard");
+            window.location.href = "/board-dashboard/dashboard";
             return;
           }
 
