@@ -126,7 +126,11 @@ function Row({
       totalWeightedScore - indicator.agreedWeightedScore;
     const overallAgreedScorePerformances =
       overallPerformanceAreasScore - area.performance_area_score;
-    navigate("/add_actual_performance", {
+    
+    // Encode the indicator name for use as a URL parameter
+    const indicatorName = encodeURIComponent(indicator.description);
+    
+    navigate(`/add_actual_performance?indicatorName=${indicatorName}`, {
       state: {
         indicator,
         program,

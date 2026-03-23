@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
@@ -32,7 +32,6 @@ import DialogTitle from "@material-ui/core/DialogTitle";
 import axiosClient from "../../authentication/axios-client";
 import ArticleIcon from "@mui/icons-material/Article";
 import { useStateContext } from "../../context/ContextProvider";
-import { useLocation } from "react-router-dom";
 import Grid from "@mui/material/Grid";
 import { borderRadius } from "@mui/system";
 import Card from "@mui/material/Card";
@@ -342,6 +341,15 @@ const ActualPerformance = () => {
         setCurrentPerformanceData(area);
         setTotalPerformanceScore(totalAgreedScorePerformances);
         setOverallAgreedScore(overallAgreedScorePerformances);
+        
+        // Get indicator name from URL search params
+        const searchParams = new URLSearchParams(location.search);
+        const indicatorNameParam = searchParams.get('indicatorName');
+        if (indicatorNameParam) {
+          const decodedIndicatorName = decodeURIComponent(indicatorNameParam);
+          console.log("Indicator name from URL:", decodedIndicatorName);
+          setSelectedIndicator(decodedIndicatorName);
+        }
       } catch (error) {
         setError(error.message);
         console.error(error);
@@ -610,7 +618,7 @@ const ActualPerformance = () => {
                 </Typography>
               </div>
             )} */}
-            <h4>Add Actual Performance For Indicator </h4>
+            <h4>Add Actual Performance For Indicator: {selectedIndicator || (selectedIndicatorData && selectedIndicatorData.description)} </h4>
 
             <form style={{ width: "670px" }}>
               <div
@@ -701,7 +709,7 @@ const ActualPerformance = () => {
                 />
               </div>
 
-              <div
+              {/* <div
                 style={{
                   // display: "flex",
                   alignItems: "center",
@@ -712,7 +720,7 @@ const ActualPerformance = () => {
                 }}
               >
                 <Typography variant="body2" sx={{ mt: 6, fontWeight: "bold" }}>
-                  Score:
+                  Scoree:
                 </Typography>
                 <Typography
                   variant="h8"
@@ -749,7 +757,7 @@ const ActualPerformance = () => {
                 <Typography variant="body2" sx={{ mt: 1 }}>
                   {incrementalOrDecremental}
                 </Typography>
-              </div>
+              </div> */}
               <div
                 style={{
                   display: "flex",

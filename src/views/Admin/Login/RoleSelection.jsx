@@ -115,11 +115,11 @@ export default function RoleSelection({ userName, token, userRoles, onRoleSelect
           })}
         </div>
 
-        <div className="role-selection-footer">
+        {/* <div className="role-selection-footer">
           <p className="footer-text">
             You can switch roles later from your profile settings
           </p>
-        </div>
+        </div> */}
       </div>
     </div>
   );
