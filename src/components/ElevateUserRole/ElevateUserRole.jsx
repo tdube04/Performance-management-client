@@ -16,6 +16,7 @@ import axiosClient from "../../authentication/axios-client";
 import { useNavigate } from "react-router-dom";
 
 const AVAILABLE_ROLES = [
+  { value: "SUPER_ADMIN", label: "Super Admin", description: "Full system override", color: "#d32f2f", icon: <AdminPanelSettingsIcon /> },
   { value: "ADMIN", label: "Admin", description: "Full system access", color: "#0066cc", icon: <AdminPanelSettingsIcon /> },
   { value: "USER", label: "User", description: "Standard access", color: "#34c759", icon: <BadgeIcon /> },
   { value: "HC", label: "Human Capital", description: "HC operations", color: "#af52de", icon: <PersonSearchIcon /> },
