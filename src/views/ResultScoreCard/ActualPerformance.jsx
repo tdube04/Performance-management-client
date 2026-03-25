@@ -493,31 +493,26 @@ const ActualPerformance = () => {
                   total_overal_weighted_score: sumOfOverallAgreedWeightedScore,
                 };
 
-                console.log("updatedScorecard", updatedScorecard);
+                console.log("Sending updatedScorecard with total_overal_weighted_score:", updatedScorecard.total_overal_weighted_score);
+                console.log("Full updatedScorecard:", updatedScorecard);
 
-                try {
-                  axiosClient
-                    .put(
-                      `/scorecard/updateScorecard/${scorecardId}`,
-                      updatedScorecard
-                    )
-                    .then((res) => {
-                      console.log("Status code:", res.status);
-                      if (res.status === 200) {
-                        swal({
-                          text: "Actual Performance Added Successfully",
-                          icon: "success",
-                          button: "OK!",
-                        });
-                        navigate("/resultscorecard");
-                      }
-                    })
-                    .catch((err) => {
-                      console.log(err);
-                    });
-                } catch (error) {
-                  console.log("An error occurred:", error);
-                }
+                axiosClient
+                  .put(`/scorecard/updateScorecard/${scorecardId}`, updatedScorecard)
+                  .then((res) => {
+                    console.log("Update response status:", res.status);
+                    console.log("Update response data:", res.data);
+                    if (res.status === 200) {
+                      swal({
+                        text: `Actual Performance Added Successfully! New Total Weighted Score: ${updatedScorecard.total_overal_weighted_score?.toFixed(2)}`,
+                        icon: "success",
+                        button: "OK!",
+                      });
+                      navigate("/resultscorecard");
+                    }
+                  })
+                  .catch((err) => {
+                    console.error("Update error:", err.response?.data || err.message);
+                  });
               } else {
                 // Indicator doesn't exist, create a new one
                 console.log("Indicator doesn't exist");

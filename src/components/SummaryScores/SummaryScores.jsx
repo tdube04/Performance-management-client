@@ -228,6 +228,7 @@ export default function SummaryScores() {
             setTotalOveralWeightedScore(
               response.data.content[0].total_overal_weighted_score
             );
+            console.log("Total Overall Weighted Score:", response.data.content[0].total_overal_weighted_score);
             setHasData(true);
             
             // Check if scorecard needs confirmation
@@ -346,22 +347,22 @@ export default function SummaryScores() {
         {/* No Data or Period Mismatch Message */}
         {(hasData || periodMismatch) && (
           <div style={{
-            backgroundColor: periodMismatch ? '#fff3e0' : (hasData ? 'transparent' : '#fff3e0'),
-            border: periodMismatch ? '1px solid #ff9800' : '1px solid #ff9800',
+            backgroundColor: !hasData || periodMismatch ? '#fff3e0' : 'transparent',
+            border: '1px solid #ff9800',
             borderRadius: '8px',
             padding: '20px',
             margin: '20px 0',
             textAlign: 'center',
-            display: hasData ? 'none' : 'block'
+            display: hasData && !periodMismatch ? 'none' : 'block'
           }}>
             <Typography variant="h6" color="warning" gutterBottom>
-              No data available for this period
+              {periodMismatch ? 'Period Mismatch' : 'No Scorecard Data'}
             </Typography>
             <Typography variant="body2" color="textSecondary">
               {periodMismatch 
-                ? `There is no result scorecard data available for the current open quarter (${currentOpenQuarter}). The table below shows empty values.`
-                : `There is no result scorecard data available for the evaluation period: ${evaluationPeriod}.`}
-              Please ensure that the scorecard has been submitted and approved for this period.
+                ? `Scorecard data is from ${responseBody?.content?.[0]?.evaluationPeriod}, but current quarter is ${currentOpenQuarter}. Total shown may be from different period.`
+                : `No scorecard found for ${currentOpenQuarter || evaluationPeriod}. Submit performance data first.`}
+              <br/><strong>Debug: hasData={String(hasData)}, periodMismatch={String(periodMismatch)}, total={totalOveralWeightedScore?.toFixed(2) ?? 'null'}</strong>
             </Typography>
           </div>
         )}
@@ -491,29 +492,20 @@ export default function SummaryScores() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {(hasData && !periodMismatch) ? (
-                  performanceAreas.map((area) => {
-                    if (area.performanceArea) {
-                      return (
-                        <TableRow key={area.id}>
-                          <TableCell>{area.section}</TableCell>
-                          <TableCell>{area.performanceArea}</TableCell>
-                          <TableCell>{area.weight}</TableCell>
-                          <TableCell>{area.performance_area_score}</TableCell>
-                        </TableRow>
-                      );
-                    } else {
-                      return null;
-                    }
-                  })
-                ) : (
-                  // Show empty rows when no data or period mismatch
-                  <TableRow>
-                    <TableCell colSpan={4} style={{ textAlign: "center", color: "#999" }}>
-                      No data available for this period
-                    </TableCell>
-                  </TableRow>
-                )}
+{performanceAreas.map((area, index) => area.performanceArea && (
+                    <TableRow key={area.id || index}>
+                      <TableCell>{area.section || 'N/A'}</TableCell>
+                      <TableCell>{area.performanceArea}</TableCell>
+                      <TableCell>{(area.weight || 0).toFixed(0)}%</TableCell>
+                      <TableCell>{(area.performance_area_score || 0).toFixed(2)}</TableCell>
+                    </TableRow>
+                  )) || (
+                    <TableRow>
+                      <TableCell colSpan={4} style={{ textAlign: "center", color: "#999" }}>
+                        No performance areas data available
+                      </TableCell>
+                    </TableRow>
+                  )}
                 <TableRow>
                   <TableCell colSpan={3} style={{ fontWeight: "bold" }}>
                     Total Weighted Score
@@ -522,25 +514,13 @@ export default function SummaryScores() {
                     <Typography
                       style={{
                         fontWeight: "bold",
-                        color:
-                          (hasData && !periodMismatch) ? (
-                            totalOveralWeightedScore >= 1 &&
-                            totalOveralWeightedScore <= 2
-                              ? "red"
-                              : totalOveralWeightedScore >= 3 &&
-                                totalOveralWeightedScore <= 3.9
-                              ? "orange"
-                              : totalOveralWeightedScore >= 4 &&
-                                totalOveralWeightedScore <= 4.9
-                              ? "green"
-                              : totalOveralWeightedScore >= 5 &&
-                                totalOveralWeightedScore <= 6
-                              ? "blue"
-                              : "inherit"
-                          ) : "inherit",
+                        color: totalOveralWeightedScore >= 5 ? "blue" :
+                          totalOveralWeightedScore >= 4 ? "green" :
+                          totalOveralWeightedScore >= 3 ? "orange" :
+                          totalOveralWeightedScore >= 1 ? "red" : "gray",
                       }}
                     >
-                      {(hasData && !periodMismatch) ? totalOveralWeightedScore : "0"}
+{totalOveralWeightedScore?.toFixed(2) ?? "0.00"}
                     </Typography>
                   </TableCell>
                 </TableRow>
