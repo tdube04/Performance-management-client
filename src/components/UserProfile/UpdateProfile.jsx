@@ -1,78 +1,43 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
-import Paper from "@mui/material/Paper";
-import Typography from "@mui/material/Typography";
 import "./signup.scss";
 import "animate.css/animate.min.css";
-import jwt_decode from "jwt-decode";
 import CircularProgress from "@mui/material/CircularProgress";
 import Swal from "sweetalert2";
-import axios from "axios";
 import { useStateContext } from "../../context/ContextProvider";
-import { Navigate } from "react-router-dom";
 import axiosClient from "../../authentication/axios-client";
-import Select, { selectClasses } from "@mui/joy/Select";
-import Option from "@mui/joy/Option";
-import KeyboardArrowDown from "@mui/icons-material/KeyboardArrowDown";
-import cookie from "cookie";
-import { useLocation } from "react-router-dom";
-import queryString from "query-string";
-import Cookies from "js-cookie";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import TextField from "@material-ui/core/TextField";
 import Autocomplete from "@material-ui/lab/Autocomplete";
 
 export default function UpdateProfile() {
   const navigate = useNavigate();
+  const location = useLocation();
+
   const [divisions, setDivisions] = useState([]);
   const [selectedDivision, setSelectedDivision] = useState("");
+  const [selectedSection, setSelectedSection] = useState("");
   const [selectedResources, setSelectedResources] = useState([]);
+  const [gradeSelected, setGradeSelected] = useState("");
   const [message, setMessage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [userData, setUserData] = useState(null);
+  const [currentProfileInfo, setCurrentProfileInfo] = useState(null);
   const timer = useRef();
 
-  const {
-    userName,
-    token,
-    userType,
-    profileData,
-    setUserName,
-    setToken,
-    setUserType,
-    setProfileData,
-  } = useStateContext();
-  const [gradeSelected, setGradeSelected] = useState("");
-  const [myname, setMyname] = useState("");
-  const [tokenb, setTokenb] = useState("");
-  const [password, setPassword] = useState("");
+  const { setProfileData } = useStateContext();
 
   const firstNameRef = useRef(null);
   const lastNameRef = useRef(null);
   const emailRef = useRef(null);
   const ecNumberRef = useRef(null);
-  const userNameRef = useRef(null);
   const positionRef = useRef(null);
-  const divisionRef = useRef(null);
-  const sectionRef = useRef(null);
-  const gradeRef = useRef(null);
-  const [selectedSection, setSelectedSection] = useState("");
-  const [currentProfileInfo, setCurrentProfileInfo] = useState(null);
-
-  const location = useLocation();
 
   useEffect(() => {
     const { profileData } = location.state || {};
     setCurrentProfileInfo(profileData);
-    console.log(profileData);
-  }, [currentProfileInfo]);
+  }, []);
 
   useEffect(() => {
-    console.log(currentProfileInfo);
-  }, [currentProfileInfo]);
-
-  useEffect(() => {
-    const fetchData = async () => {
+    const fetchDivisions = async () => {
       try {
         const response = await axiosClient.get("/division/allDivisions");
         setDivisions(response.data);
@@ -80,520 +45,245 @@ export default function UpdateProfile() {
         console.log(error);
       }
     };
-
-    fetchData();
+    fetchDivisions();
   }, []);
 
-  const handleDivisionChange = (event) => {
-    setSelectedDivision(event.target.value);
+  const selectedDivisionData = divisions.find(
+    (d) => d.divisionName === selectedDivision
+  );
+
+  const handleDivisionChange = (e) => {
+    setSelectedDivision(e.target.value);
     setSelectedSection("");
   };
 
-  const selectedDivisionData = divisions.find(
-    (division) => division.divisionName === selectedDivision
-  );
-
-  const handleSectionChange = (event) => {
-    setSelectedSection(event.target.value);
-  };
-
-  const handleGradeChange = (event) => {
-    setGradeSelected(event.target.value);
-  };
-
+  const handleSectionChange = (e) => setSelectedSection(e.target.value);
+  const handleGradeChange = (e) => setGradeSelected(e.target.value);
+  const handleInputClick = () => setMessage("");
 
   const onSubmit = async (ev) => {
     ev.preventDefault();
 
-    setIsLoading(true);
-    if (!isLoading) {
-      setIsLoading(true);
-      timer.current = window.setTimeout(() => {
-        setIsLoading(false);
-      }, 2000);
+    if (!firstNameRef.current.value) return setMessage("First Name is required");
+    if (!lastNameRef.current.value)  return setMessage("Last Name is required");
+    if (!emailRef.current.value)     return setMessage("Email is required");
+    if (!ecNumberRef.current.value)  return setMessage("EC Number is required");
+    if (!positionRef.current.value)  return setMessage("Position is required");
+
+    if (!/^[^\s@]+@[zimra]+\.[co]+\.[zw]+$/.test(emailRef.current.value)) {
+      return setMessage("Email must belong to the @zimra.co.zw domain");
     }
-    const formData = {
-      name: firstNameRef.current.value,
-      surname: lastNameRef.current.value,
-      email: emailRef.current.value,
-      ec_number: ecNumberRef.current.value,
-      //   username: userNameRef.current.value,
-      positionName: positionRef.current.value,
-      divisionName: selectedDivision,
-      sectionName: selectedSection,
-      grade: gradeSelected,
-      userRole: currentProfileInfo.userRole,
-    };
+
+    setIsLoading(true);
+    timer.current = window.setTimeout(() => setIsLoading(false), 2000);
+
     const updatedProfile = {
       ...currentProfileInfo,
       name: firstNameRef.current.value,
       surname: lastNameRef.current.value,
       email: emailRef.current.value,
       ec_number: ecNumberRef.current.value,
-      //   username: userNameRef.current.value,
       positionName: positionRef.current.value,
-      divisionName: selectedDivision,
-      sectionName: selectedSection,
-      grade: gradeSelected,
+      divisionName: selectedDivision || (currentProfileInfo && currentProfileInfo.divisionName),
+      sectionName: selectedSection || (currentProfileInfo && currentProfileInfo.sectionName),
+      grade: gradeSelected || (currentProfileInfo && currentProfileInfo.grade),
     };
 
-    if (/^[^\s@]+@[zimra]+\.[co]+\.[zw]+$/.test(emailRef.current.value)) {
-      // Email is valid and belongs to the @zimra.co.zw domain
-    } else {
-      setMessage(
-        "Email is invalid or does not belong to the @zimra.co.zw domain"
-      );
-    }
-    if (!firstNameRef.current.value) {
-      setMessage("First Name is required");
-      return;
-    }
-
-    if (!lastNameRef.current.value) {
-      setMessage("Last Name is required");
-      return;
-    }
-    // if (!userNameRef.current.value) {
-    //   setMessage("User name is required");
-    //   return;
-    // }
-
-    if (!emailRef.current.value) {
-      setMessage("Email is required");
-      return;
-    }
-    if (!ecNumberRef.current.value) {
-      setMessage(" Ec Number is required");
-      return;
-    }
-    if (!positionRef.current.value) {
-      setMessage("Position is required");
-      return;
-    }
-    // if (!selectedDivision) {
-    //   setMessage("Division is required");
-    //   return;
-    // }
-    // if (!selectedSection) {
-    //   setMessage("Section is required");
-    //   return;
-    // }
-    // if (!gradeSelected) {
-    //   setMessage("Grade is required");
-    //   return;
-    // }
-
-    if (selectedDivision) {
-      updatedProfile.divisionName = selectedDivision;
-    } else {
-      updatedProfile.divisionName =
-        currentProfileInfo && currentProfileInfo.divisionName;
-    }
-    if (selectedSection) {
-      updatedProfile.sectionName = selectedSection;
-    } else {
-      updatedProfile.sectionName =
-        currentProfileInfo && currentProfileInfo.sectionName;
-    }
-    if (gradeSelected) {
-      updatedProfile.grade = gradeSelected;
-    } else {
-      updatedProfile.grade = currentProfileInfo && currentProfileInfo.grade;
-    }
-
     try {
-      const response = await axiosClient
-        .put(`/updateUser/${currentProfileInfo.username}`, updatedProfile)
-        .then((response) => {
-          console.log(response);
-          if (response.status === 200) {
-            Swal.fire({
-              title: "Success!",
-              text: "Successfully Updated!",
-              icon: "success",
-              timer: 2000,
-            });
-
-            navigate("/");
-            setProfileData(updatedProfile);
-            console.log(profileData);
-          } else if (response.status === 500) {
-            setMessage("Internal Server Error");
-          } else if (response.status === 400) {
-            setMessage("Bad Request");
-          } else if (response.status === 404) {
-            setMessage("Not Found");
-          } else if (response.status === 403) {
-            setMessage("Forbidden");
-          } else {
-            setMessage("An error occurred");
-          }
+      const response = await axiosClient.put(
+        `/updateUser/${currentProfileInfo.username}`,
+        updatedProfile
+      );
+      if (response.status === 200) {
+        Swal.fire({
+          title: "Success!",
+          text: "Profile updated successfully!",
+          icon: "success",
+          confirmButtonColor: "#2e7d32",
+          timer: 2500,
+          timerProgressBar: true,
         });
-
-      //   console.log(response.data);
+        setProfileData(updatedProfile);
+        navigate("/");
+      } else {
+        setMessage("An error occurred. Please try again.");
+      }
     } catch (error) {
       console.error(error);
+      setMessage("An error occurred. Please try again.");
+    } finally {
       setIsLoading(false);
     }
   };
-  // const handleDivisionChange = (event) => {
-  //   if (event && event.target) {
-  //     setSectionNames(event.target.value);
-  //   }
-  // };
-  const handleEmailChange = () => {
-    const emailValue = emailRef.current.value;
-    const atIndex = emailValue.indexOf("@");
-    if (atIndex !== -1) {
-      const username = emailValue.substring(0, atIndex);
-      setMyname(username);
-      userNameRef.current.value = username;
-    }
-  };
-
-  const handleInputClick = () => {
-    setMessage("");
-  };
-
-  const handleNavigeteCancel = () => {
-    navigate("/");
-  };
 
   return (
-    <>
-      <Paper
-        elevation={1}
-        sx={{
-          ml: 50,
-          display: "flex",
-          backgroundColor: "white",
-          width: "400px",
-          border: "1px solid #B4B2A9",
-          borderRadius: "6px",
-        }}
-      >
-        {" "}
-        <Typography variant="body2" sx={{ textAlign: "center", ml: 5, p: 1 }}>
-          <strong>
-            {" "}
-            Edit Your Profile for ZIMRA Perfomance Evaluation System
-          </strong>
-        </Typography>
-      </Paper>
-      <div className="login-signup-form animated fadeInDown">
-        <div className="form" style={{ marginLeft: "845px" }}>
-          <form onSubmit={onSubmit}>
-            <h1 className="title">Update Your Profile</h1>
-            <Typography className="" sx={{ ml: 10 }}>
-              Register on ZIMRA Perfomance Evaluation System
-            </Typography>
+    <div className="signup-container">
+      <div className="signup-wrapper">
 
-            <div style={{ marginBottom: "5px" }}>
-              <label>First Name: </label>
-              <input
-                defaultValue={currentProfileInfo && currentProfileInfo.name}
-                className="input1"
-                type="text"
-                placeholder="First Name"
-                variant="outlined"
-                onClick={handleInputClick}
-                ref={firstNameRef}
-              />
+        <div className="signup-form-section">
+          <div className="form-header">
+            <h1 className="title">Update Profile</h1>
+            <p className="subtitle">Edit your ZIMRA Performance Evaluation System profile</p>
+          </div>
+
+          <form onSubmit={onSubmit}>
+
+            {/* First Name + Last Name */}
+            <div className="form-row">
+              <div className="form-group">
+                <label>First Name</label>
+                <input
+                  className="input-field"
+                  type="text"
+                  placeholder="First Name"
+                  defaultValue={currentProfileInfo?.name}
+                  onClick={handleInputClick}
+                  ref={firstNameRef}
+                />
+              </div>
+              <div className="form-group">
+                <label>Last Name</label>
+                <input
+                  className="input-field"
+                  type="text"
+                  placeholder="Last Name"
+                  defaultValue={currentProfileInfo?.surname}
+                  onClick={handleInputClick}
+                  ref={lastNameRef}
+                />
+              </div>
             </div>
-            <div style={{ marginBottom: "5px" }}>
-              <label>Last Name: </label>
+
+            {/* Email */}
+            <div className="form-group">
+              <label>Email</label>
               <input
-                defaultValue={currentProfileInfo && currentProfileInfo.surname}
-                className="input1"
-                type="text"
-                placeholder="Last Name"
-                variant="outlined"
-                onClick={handleInputClick}
-                ref={lastNameRef}
-              />
-            </div>
-            <div style={{ marginBottom: "5px" }}>
-              <label>Email: </label>
-              <input
-                defaultValue={currentProfileInfo && currentProfileInfo.email}
-                className="input2"
+                className="input-field"
                 type="email"
                 placeholder="email@zimra.co.zw"
+                defaultValue={currentProfileInfo?.email}
                 onClick={handleInputClick}
-                onChange={handleEmailChange}
                 ref={emailRef}
               />
             </div>
-            <div style={{ marginBottom: "5px" }}>
-              <label>EC Number: </label>
-              <input
-                defaultValue={
-                  currentProfileInfo && currentProfileInfo.ec_number
-                }
-                className="input2"
-                type="number"
-                placeholder="EC Number"
-                onClick={handleInputClick}
-                ref={ecNumberRef}
-              />
+
+            {/* EC Number + Position */}
+            <div className="form-row">
+              <div className="form-group">
+                <label>EC Number</label>
+                <input
+                  className="input-field"
+                  type="number"
+                  placeholder="EC Number"
+                  defaultValue={currentProfileInfo?.ec_number}
+                  onClick={handleInputClick}
+                  ref={ecNumberRef}
+                />
+              </div>
+              <div className="form-group">
+                <label>Position</label>
+                <input
+                  className="input-field"
+                  type="text"
+                  placeholder="Position"
+                  defaultValue={currentProfileInfo?.positionName}
+                  onClick={handleInputClick}
+                  ref={positionRef}
+                />
+              </div>
             </div>
-            {/* <div style={{ marginBottom: "5px" }}>
-            <label>User Name: </label>
-            <input
-             defaultValue={currentProfileInfo.name}
-              defaultValue={userName}
-              className="input2"
-              type="text"
-              placeholder="User Name"
-              onClick={handleInputClick}
-              ref={userNameRef}
-            />
-          </div> */}
-            <div style={{ marginBottom: "5px" }}>
-              <label>Position: </label>
-              <input
-                defaultValue={
-                  currentProfileInfo && currentProfileInfo.positionName
-                }
-                className="input2"
-                type="text"
-                placeholder="Position"
-                onClick={handleInputClick}
-                ref={positionRef}
-              />
-            </div>
-            {/* <div style={{ marginBottom: "5px" }}>
-            <label>Division: </label>
-            <input
-              className="input2"
-              type="text"
-              placeholder="Division"
-              ref={divisionRef}
-              onClick={handleInputClick}
-            />
-          </div> */}
-            <div>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  marginBottom: "5px",
-                }}
-              >
-                <label style={{ marginRight: "10px" }}>Division:</label>
+
+            {/* Division + Section */}
+            <div className="form-row">
+              <div className="form-group">
+                <label>Division</label>
                 <select
-                  defaultValue={
-                    currentProfileInfo && currentProfileInfo.divisionName
-                  }
-                  className="input2"
+                  className="input-field"
                   value={selectedDivision}
                   onChange={handleDivisionChange}
-                  placeholder="Select a division…"
-                  style={{
-                    marginLeft: "80px",
-                    width: 247,
-                    backgroundColor: "#f9f6f6",
-                  }}
                 >
-                  <option
-                    value={
-                      currentProfileInfo && currentProfileInfo.divisionName
-                    }
-                  >
-                    {currentProfileInfo && currentProfileInfo.divisionName}
+                  <option value="">
+                    {currentProfileInfo?.divisionName || "Select a division…"}
                   </option>
-                  {divisions &&
-                    divisions.map((division) => (
-                      <option
-                        key={division.divisionName}
-                        value={division.divisionName}
-                      >
-                        {division.divisionName}
-                      </option>
-                    ))}
+                  {divisions.map((d) => (
+                    <option key={d.divisionName} value={d.divisionName}>
+                      {d.divisionName}
+                    </option>
+                  ))}
                 </select>
               </div>
-
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  marginBottom: "5px",
-                }}
-              >
-                <label style={{ marginRight: "10px" }}>Section:</label>
+              <div className="form-group">
+                <label>Section</label>
                 <select
-                  defaultValue={
-                    currentProfileInfo && currentProfileInfo.sectionName
-                  }
-                  className="input2"
+                  className="input-field"
                   value={selectedSection}
                   onChange={handleSectionChange}
-                  placeholder="Select a section…"
-                  style={{
-                    marginLeft: "80px",
-                    width: 247,
-                    backgroundColor: "#f9f6f6",
-                  }}
                 >
-                  <option
-                    value={currentProfileInfo && currentProfileInfo.sectionName}
-                  >
-                    {currentProfileInfo && currentProfileInfo.sectionName}
+                  <option value="">
+                    {currentProfileInfo?.sectionName || "Select a section…"}
                   </option>
-                  {selectedDivisionData &&
-                    selectedDivisionData.sectionName.map((sectionName) => (
-                      <option
-                        key={sectionName}
-                        value={sectionName}
-                      >
-                        {sectionName}
-                      </option>
-                    ))}
+                  {selectedDivisionData?.sectionName?.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
                 </select>
               </div>
             </div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                marginBottom: "5px",
-              }}
-            >
-              <label style={{ marginRight: "10px" }}>Grade: </label>
-              <select
-                defaultValue={currentProfileInfo && currentProfileInfo.grade}
-                className="input2"
-                onChange={handleGradeChange}
-                placeholder="Select a grade…"
-                value={gradeSelected}
-                indicator={<KeyboardArrowDown />}
-                style={{
-                  marginLeft: "80px",
-                  width: 247,
-                  backgroundColor: "#f9f6f6",
-                  [`& .${selectClasses.indicator}`]: {
-                    transition: "0.2s",
-                    [`&.${selectClasses.expanded}`]: {
-                      transform: "rotate(-180deg)",
-                    },
-                  },
-                }}
-              >
-                <option value={currentProfileInfo && currentProfileInfo.grade}>
-                  {currentProfileInfo && currentProfileInfo.grade}
-                </option>
-                <option key="1" value="1">
-                  1
-                </option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-                <option value="5">5</option>
-                <option value="6">6</option>
-                <option value="7">7</option>
-                <option value="8">8</option>
-                <option value="9">9</option>
-                <option value="10">10</option>
-                <option value="11">11</option>
-                <option value="12">12</option>
-                <option value="13">13</option>
-                <option value="14">14</option>
-                <option value="15">15</option>
-                <option value="16">16</option>
-              </select>
-              {/* <input
-              className="input2"
-              type="text"
-              placeholder="Grade"
-              ref={gradeRef}
-              onClick={handleInputClick}
-            /> */}
-            </div>
-            <div style={{ marginLeft: "-5px" }}>
-              <label
-                style={{
-                  textAlign: "left",
-                  width: "180px",
 
-                  marginRight: "60px",
-                }}
+            {/* Grade */}
+            <div className="form-group">
+              <label>Grade</label>
+              <select
+                className="input-field"
+                value={gradeSelected}
+                onChange={handleGradeChange}
               >
-                My Appraisees:{" "}
-              </label>
+                <option value="">
+                  {currentProfileInfo?.grade || "Select a grade…"}
+                </option>
+                {Array.from({ length: 16 }, (_, i) => i + 1).map((g) => (
+                  <option key={g} value={String(g)}>{g}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Appraisees */}
+            <div className="form-group">
+              <label>My Appraisees</label>
               <Autocomplete
-                options={
-                  (currentProfileInfo && currentProfileInfo.appraisees) || []
-                }
+                options={(currentProfileInfo?.appraisees) || []}
                 multiple
-                style={{ width: 500, backgroundColor: "#f9f6f6" }}
                 value={selectedResources}
-                onChange={(event, newValue) => {
-                  setSelectedResources(newValue);
-                }}
+                onChange={(_, newValue) => setSelectedResources(newValue)}
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    // variant="standard"
-                    placeholder="You can select many people"
-                    InputProps={{
-                      ...params.InputProps,
-                      style: {
-                        background: "#f9f6f6",
-                        borderRadius: "8px",
-                        padding: "0.5rem",
-                        border: "1px solid #ccc", // Add thin border here
-                      },
-                    }}
+                    placeholder="Select appraisees"
+                    variant="outlined"
                   />
                 )}
               />
             </div>
-            <div className="">
-              <button className="btn-login">
-                {isLoading ? (
-                  <div style={{ margin: "auto" }}>
-                    <CircularProgress color="success" />{" "}
-                  </div>
-                ) : (
-                  "Update"
-                )}
-              </button>
-            </div>
 
-            {userData && (
-              <div>
-                <p>Welcome, {userData.sub}!</p>
-                <ul>
-                  {userData.ADMIN.map((permission, index) => (
-                    <li key={index}>{permission}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            {/* Submit */}
+            <button className="btn-submit" type="submit" disabled={isLoading}>
+              {isLoading ? <CircularProgress color="inherit" size={22} /> : "Save Changes"}
+            </button>
 
+            {/* Error message */}
             {message && (
-              <div className="alert alert-danger">
+              <div className="alert">
                 <p>{message}</p>
               </div>
             )}
+
+            {/* Cancel */}
+            <span className="cancel-link" onClick={() => navigate("/")}>
+              Cancel — go back to dashboard
+            </span>
+
           </form>
-          <div style={{ marginRight: "160px" }}>
-            <Typography
-              onClick={handleNavigeteCancel}
-              sx={{
-                ml: 55,
-                "&:hover": {
-                  color: "green",
-                  cursor: "pointer",
-                },
-              }}
-            >
-              Cancel
-            </Typography>
-          </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
