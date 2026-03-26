@@ -252,7 +252,7 @@ const MyNotifications = () => {
               <AiIcons.AiFillEye />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Go to Task">
+          {/* <Tooltip title="Go to Task">
             <IconButton
               size="small"
               color="primary"
@@ -261,7 +261,7 @@ const MyNotifications = () => {
             >
               <AiIcons.AiOutlineArrowRight />
             </IconButton>
-          </Tooltip>
+          </Tooltip> */}
         </Box>
       ),
     },
@@ -364,7 +364,7 @@ const MyNotifications = () => {
             </Box>
           )}
         </DialogContent>
-        <Box className="dialog-actions">
+        {/* <Box className="dialog-actions">
           <Button onClick={() => setViewDialogOpen(false)}>Close</Button>
           <Button
             variant="contained"
@@ -375,7 +375,7 @@ const MyNotifications = () => {
           >
             Go to Task
           </Button>
-        </Box>
+        </Box> */}
       </Dialog>
     </div>
   );
